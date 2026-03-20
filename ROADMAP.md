@@ -10,13 +10,13 @@ gantt
     tickInterval 1w
 
     section Initial Setup
-    Requirements & User Roles (4h)       :active, setup1, 2026-02-13, 7d
-    Confirm Quiz & Scoring               :setup2, after setup1, 2d
+    Requirements & User Roles (4h)       :done, setup1, 2026-02-13, 7d
+    Confirm Quiz & Scoring               :active, after setup1, 2d
 
     section Sprint 1
-    ER Diagrams (Users/Cities/QS) (4h)   :s1a, 2026-02-25, 7d
-    Logic & Navigation Flow (4h)         :s1b, after s1a, 7d
-    UI Design & Data Sourcing (6h)       :s1c, after s1b, 7d
+    ER Diagrams (Users/Cities/QS) (4h)   :done, s1a, 2026-02-25, 7d
+    Logic & Navigation Flow (4h)         :active, s1b, after s1a, 7d
+    UI Design & Data Sourcing (6h)       :active, s1c, after s1b, 7d
 
     section Sprint 2
     Frontend Dev (Map/Account/Quiz) (10h):s2a, 2026-03-23, 8d

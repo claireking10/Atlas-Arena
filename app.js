@@ -43,11 +43,13 @@ app.get('/', async (req, res) => {
         }
         const result = await pool.request()
             .query('SELECT TOP 5 * FROM users ORDER BY totalScore DESC');
+        const result2 = await pool.request()
+            .query('SELECT * FROM cities')
 
-        res.render('home', { users: result.recordset });
+        res.render('home', { users: result.recordset, cities: result2.recordset });
     } catch (err) {
         console.error('Home page error:', err);
-        res.status(500).render('home', { users: [], error: "Currently unable to load leaderboard." });
+        res.status(500).render('home', { users: [], cities: [], error: "Currently unable to load leaderboard." });
     }
 });
 

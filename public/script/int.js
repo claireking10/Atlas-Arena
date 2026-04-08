@@ -7,12 +7,16 @@
 // @ts-nocheck
 // [START maps_3d_marker_click_event]
 
-function addMarker(entry){
+function addMarker(entry, Map3DElement, Marker3DInteractiveElement){
 // Create the interactive marker and set the attributes.
+    
 
+    //const newDiv = document.createElement("div");
+    //newDiv.textContent = "table info: "+entry.name + " " + entry.description + " " + parseFloat(entry.posX) + " " + entry.posY;
+    //document.body.appendChild(newDiv);
 
     const interactiveMarker = new Marker3DInteractiveElement({
-        position: { lat: entry.posX, lng: posY, altitude: 100 },
+        position: { lat: parseFloat(entry.posX), lng: parseFloat(entry.posY), altitude: 100 },
         sizePreserved: true,
         altitudeMode: 'RELATIVE_TO_MESH',
         extruded: true,
@@ -20,13 +24,13 @@ function addMarker(entry){
     });
 
     // Specify the action to take on click.
-    interactiveMarker.addEventListener('gmp-click', (event) => {
-        map.flyCameraAround({
-            camera: originalCamera,
-            durationMillis: 50000,
-            repeatCount: 1,
-        });
-    });
+    //interactiveMarker.addEventListener('gmp-click', (event) => {
+    //    map.flyCameraAround({
+    //        camera: originalCamera,
+    //        durationMillis: 50000,
+    //        repeatCount: 1,
+    //    });
+    //});
 
     return interactiveMarker;
 }
@@ -38,9 +42,9 @@ async function initMap() {
 
     // We will use this to place the camrea for the intial view but also to fly around the starting point.
     const originalCamera = {
-        center: { lat: 39.1178, lng: -106.4452, altitude: 4395.4952 },
+        center: { lat: 37.7749, lng: -122.4194, altitude: 4395.4952 },
         range: 1500,
-        tilt: 74,
+        tilt: 0,
         heading: 0,
     };
 
@@ -52,19 +56,20 @@ async function initMap() {
 
     
     citiesTable.forEach((element, index, array) => {
-        map.append(addMarker(element))
+        map.append(addMarker(element, Map3DElement, Marker3DInteractiveElement))
     });
 
-    //map.append(interactiveMarker);
+    map.append(addMarker({name: 'Test City', description: 'Test description', posX: '40', posY: '50'}, Map3DElement, Marker3DInteractiveElement));
 
     document.body.append(map);
-    const newDiv = document.createElement("div");
-    newDiv.textContent = "table info: "+citiesTable;
-    document.body.appendChild(newDiv);
 
-    console.log("test");
+    //const newDiv = document.createElement("div");
+    //newDiv.textContent = "table info: "+addMarker({name: 'Test City', description: 'Test description', posX: '40', posY: '50'}, Map3DElement, Marker3DInteractiveElement);
+    //document.body.appendChild(newDiv);
+
+    //console.log("test");
 }
 
-console.log("test");
+//console.log("test");
 initMap();
 // [END maps_3d_marker_click_event]

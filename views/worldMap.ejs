@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/styles.css">
+    <title>Atlas Arena - Map Trivia</title>
+    <style>
+body { font-family: sans-serif; text-align: center; }
+        
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Atlas Arena</h1>
+        <p>A Map-based Trivia Web application</p>
+    </header>
+
+    <main>
+        <div id="map-placeholder">
+            <img src="https://img.freepik.com/free-vector/bright-aquamarine-world-map-dotted-style-template-design_1017-46150.jpg?semt=ais_rp_progressive&w=740&q=80" alt="World Map">
+            <button type = "button" onclick="alert(getEntry('San Antonio'))" class="pin-placeholder">
+                <img src="https://pngimg.com/d/google_maps_pin_PNG76.png" alt="City Pin" width="75">
+                <p style="color: white; text-shadow: 2px 2px 2px #000000;">San Antonio</p>
+            </button>
+            <button type = "button" onclick="alert(getEntry('Chicago'))" class="pin-placeholder" style="left: 10%">
+                <img src="https://pngimg.com/d/google_maps_pin_PNG76.png" alt="City Pin" width="75">
+                <p style="color: white; text-shadow: 2px 2px 2px #000000;">Chicago</p>
+            </button>
+            <button type = "button" onclick="alert(getEntry('San Francisco'))" class="pin-placeholder" style="left: 90%">
+                <img src="https://pngimg.com/d/google_maps_pin_PNG76.png" alt="City Pin" width="75">
+                <p style="color: white; text-shadow: 2px 2px 2px #000000;">San Francisco</p>
+            </button>
+
+            
+            <!-- <p>Interactive Map Component will be loaded here.</p> -->
+        </div>
+
+        <button type="button" onclick="alert('Start Game functionality coming soon!')">
+            Start Random Quiz
+        </button>
+    </main>
+
+    <section class="leaderboard">
+        <h2>Top Players</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (users && users.length > 0) { %>
+                    <% users.forEach(user => { %>
+                        <tr>
+                            <td><%= user.username || 'Anonymous' %></td>
+                            <td><%= user.totalScore || 0 %></td>
+                        </tr>
+                    <% }); %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="2">No players found yet.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Atlas Arena Project</p>
+    </footer>
+    <script>
+        const citiesTable = <%- JSON.stringify(typeof cities !== 'undefined' ? cities : []) %>;
+        
+        console.log(citiesTable);
+
+        function getEntry(idToFind) { 
+            
+            // Find the specific row in the array
+            const entry = citiesTable.find(item => item.name == idToFind);
+            
+            if (entry) {
+                return entry.description;
+                //document.getElementById('result').innerText = `Found: ${entry.name}`;
+            } else {
+                return "City Information not Retrieved";
+                //document.getElementById('result').innerText = "Entry not found.";
+            }
+        }
+    </script>
+</body>
+</html>

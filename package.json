@@ -21,6 +21,7 @@
   "dependencies": {
     "ejs": "^5.0.1",
     "express": "^5.2.1",
+    "google-maps": "^4.3.3",
     "mssql": "^12.2.1"
   }
 }

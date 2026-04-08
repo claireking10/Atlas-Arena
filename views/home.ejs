@@ -1,115 +1,27 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<!--
+ @license
+ Copyright 2025 Google LLC. All Rights Reserved.
+ SPDX-License-Identifier: Apache-2.0
+-->
+<!-- [START maps_3d_simple_map] -->
+<html>
+    <head>
+        <title>Simple Map</title>
 
+        <link rel="stylesheet" type="text/css" href="/css/intStyle.css" />
+        <script>
+          const citiesTable = <%- JSON.stringify(typeof cities !== 'undefined' ? cities : []) %>;
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atlas Arena - Map Trivia</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; }
-        #map-placeholder { 
-            width: 400px; height: 400px; 
-            position: relative;
-            background: #e0e0e0; margin: 20px auto; 
-            display: flex; align-items: center; justify-content: center;
-        }
-        #map-placeholder .pin-placeholder {
-            position: absolute;
-            background-color: transparent;
-            border: none;
-            outline: none;
-            cursor: pointer;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        .leaderboard { margin-top: 30px; }
-        table { margin: 0 auto; border-collapse: collapse; width: 50%; }
-        th, td { border: 1px solid #ccc; padding: 8px; }
-    </style>
-</head>
-<body>
+        </script>
+        <script type="module" src="/script/int.js">
 
-    
-
-    <header>
-        <h1>Atlas Arena</h1>
-        <p>A Map-based Trivia Web application</p>
-    </header>
-
-    <main>
-        <div id="map-placeholder">
-            <img src="https://img.freepik.com/free-vector/bright-aquamarine-world-map-dotted-style-template-design_1017-46150.jpg?semt=ais_rp_progressive&w=740&q=80" alt="World Map">
-            <button type = "button" onclick="alert(getEntry('San Antonio'))" class="pin-placeholder">
-                <img src="https://pngimg.com/d/google_maps_pin_PNG76.png" alt="City Pin" width="75">
-                <p style="color: white; text-shadow: 2px 2px 2px #000000;">San Antonio</p>
-            </button>
-            <button type = "button" onclick="alert(getEntry('Chicago'))" class="pin-placeholder" style="left: 10%">
-                <img src="https://pngimg.com/d/google_maps_pin_PNG76.png" alt="City Pin" width="75">
-                <p style="color: white; text-shadow: 2px 2px 2px #000000;">Chicago</p>
-            </button>
-            <button type = "button" onclick="alert(getEntry('San Francisco'))" class="pin-placeholder" style="left: 90%">
-                <img src="https://pngimg.com/d/google_maps_pin_PNG76.png" alt="City Pin" width="75">
-                <p style="color: white; text-shadow: 2px 2px 2px #000000;">San Francisco</p>
-            </button>
-
-            
-            <!-- <p>Interactive Map Component will be loaded here.</p> -->
-        </div>
-
-        <button type="button" onclick="alert('Start Game functionality coming soon!')">
-            Start Random Quiz
-        </button>
-    </main>
-
-    <section class="leaderboard">
-        <h2>Top Players</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>User</th>
-                    <th>Score</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (users && users.length > 0) { %>
-                    <% users.forEach(user => { %>
-                        <tr>
-                            <td><%= user.username || 'Anonymous' %></td>
-                            <td><%= user.totalScore || 0 %></td>
-                        </tr>
-                    <% }); %>
-                <% } else { %>
-                    <tr>
-                        <td colspan="2">No players found yet.</td>
-                    </tr>
-                <% } %>
-            </tbody>
-        </table>
-    </section>
-
-    <footer>
-        <p>&copy; 2026 Atlas Arena Project</p>
-    </footer>
-    <script>
-        const citiesTable = <%- JSON.stringify(typeof cities !== 'undefined' ? cities : []) %>;
-        
-        console.log(citiesTable);
-
-        function getEntry(idToFind) { 
-            
-            // Find the specific row in the array
-            const entry = citiesTable.find(item => item.name == idToFind);
-            
-            if (entry) {
-                return entry.description;
-                //document.getElementById('result').innerText = `Found: ${entry.name}`;
-            } else {
-                return "City Information not Retrieved";
-                //document.getElementById('result').innerText = "Entry not found.";
-            }
-        }
-    </script>
-</body>
+        </script>
+    </head>
+    <body>
+        <!-- prettier-ignore -->
+        <script>(g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
+        ({key: "AIzaSyC00h5ic3Spi2o5YKUy09128ksZ1rGjjsg", v: "weekly" });</script>
+    </body>
 </html>
+<!-- [END maps_3d_simple_map] -->

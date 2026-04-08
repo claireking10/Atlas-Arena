@@ -16,6 +16,17 @@ body { font-family: sans-serif; text-align: center; }
     <header>
         <h1>Atlas Arena</h1>
         <p>A Map-based Trivia Web application</p>
+        
+        <div style="margin-top: 15px; margin-bottom: 15px;">
+            <% if (currentUser) { %>
+                <span style="font-weight: bold; margin-right: 15px;">
+                    Welcome to the Arena, <%= currentUser.username %>!
+                </span>
+                <a href="/logout" style="padding: 8px 16px; background-color: #ff4c4c; color: white; border-radius: 5px; text-decoration: none; font-size: 14px;">Sign Out</a>
+            <% } else { %>
+                <a href="/login" style="padding: 8px 16px; background-color: #0078D4; color: white; border-radius: 5px; text-decoration: none; font-size: 14px;">Sign In / Join Arena</a>
+            <% } %>
+        </div>
     </header>
 
     <main>

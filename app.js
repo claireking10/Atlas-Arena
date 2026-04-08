@@ -9,6 +9,7 @@ const port = parseInt(process.env.AZURE_SQL_PORT);
 const authenticationType = process.env.AZURE_SQL_AUTHENTICATIONTYPE;
 
 app.set('view engine', 'ejs');
+app.use(express.static('public'))
 
 // For system-assigned managed identity.
 const config = {
@@ -37,6 +38,7 @@ async function initDB() {
 
 // Route: Top 5 users
 app.get('/', async (req, res) => {
+
     try {
         if (!pool) {
             throw new Error("Database connection not established");
@@ -44,7 +46,7 @@ app.get('/', async (req, res) => {
         const result = await pool.request()
             .query('SELECT TOP 5 * FROM users ORDER BY totalScore DESC');
         const result2 = await pool.request()
-            .query('SELECT * FROM cities');
+            .query('SELECT * FROM citiesTest');
         res.render('home', { users: result.recordset, cities: result2.recordset });
     } catch (err) {
         console.error('Home page error:', err);
@@ -63,5 +65,14 @@ async function startServer() {
 }
 
 startServer();
+
+
+
+
+
+
+
+
+
 
 

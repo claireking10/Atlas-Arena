@@ -36,9 +36,10 @@ async function initMap() {
     const { Map3DElement, Marker3DInteractiveElement } =
         await google.maps.importLibrary('maps3d');
 
+    //const container = document.getElementById("map-placeholder");
     // We will use this to place the camrea for the intial view but also to fly around the starting point.
     const originalCamera = {
-        center: { lat: 37.7749, lng: -122.4194, altitude: 4395.4952 },
+        center: { lat: 38.7946, lng: -106.5348, altitude: 5000000 },
         range: 1500,
         tilt: 0,
         heading: 0,
@@ -58,6 +59,18 @@ async function initMap() {
     map.append(addMarker({name: 'Test City', description: 'Test description', posX: '40', posY: '50'}, Map3DElement, Marker3DInteractiveElement));
 
     document.body.append(map);
+
+    //document.addEventListener("DOMContentLoaded", () => {
+    //    const container = document.getElementById("map-placeholder");
+//
+    //    const div = document.createElement("div");
+    //    div.innerHTML = "hello";
+//
+    //    container.appendChild(div);
+    //});
+
+
+
 
     //const newDiv = document.createElement("div");
     //newDiv.textContent = "table info: "+addMarker({name: 'Test City', description: 'Test description', posX: '40', posY: '50'}, Map3DElement, Marker3DInteractiveElement);

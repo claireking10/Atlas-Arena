@@ -20,23 +20,11 @@ body { font-family: sans-serif; text-align: center; }
 
     <main>
         <div id="map-placeholder">
-            <img src="https://img.freepik.com/free-vector/bright-aquamarine-world-map-dotted-style-template-design_1017-46150.jpg?semt=ais_rp_progressive&w=740&q=80" alt="World Map">
-            <button type = "button" onclick="alert(getEntry('San Antonio'))" class="pin-placeholder">
-                <img src="https://pngimg.com/d/google_maps_pin_PNG76.png" alt="City Pin" width="75">
-                <p style="color: white; text-shadow: 2px 2px 2px #000000;">San Antonio</p>
-            </button>
-            <button type = "button" onclick="alert(getEntry('Chicago'))" class="pin-placeholder" style="left: 10%">
-                <img src="https://pngimg.com/d/google_maps_pin_PNG76.png" alt="City Pin" width="75">
-                <p style="color: white; text-shadow: 2px 2px 2px #000000;">Chicago</p>
-            </button>
-            <button type = "button" onclick="alert(getEntry('San Francisco'))" class="pin-placeholder" style="left: 90%">
-                <img src="https://pngimg.com/d/google_maps_pin_PNG76.png" alt="City Pin" width="75">
-                <p style="color: white; text-shadow: 2px 2px 2px #000000;">San Francisco</p>
-            </button>
-
-            
+          <p>some text</p>
+          <%- include('worldMap') %>
             <!-- <p>Interactive Map Component will be loaded here.</p> -->
         </div>
+        <div></div>
 
         <button type="button" onclick="alert('Start Game functionality coming soon!')">
             Start Random Quiz
@@ -75,7 +63,7 @@ body { font-family: sans-serif; text-align: center; }
     <script>
         const citiesTable = <%- JSON.stringify(typeof cities !== 'undefined' ? cities : []) %>;
         
-        console.log(citiesTable);
+        
 
         function getEntry(idToFind) { 
             

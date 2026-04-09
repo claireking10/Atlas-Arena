@@ -7,41 +7,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/style.css">
     <title>Atlas Arena - Home</title>
-    <style>
-body { font-family: sans-serif; text-align: center; }
-        
-    </style>
 </head>
-<body style="background-color: white;">
-    <header>
-        <h1>Atlas Arena</h1>
-        <p>A Map-based Trivia Web application</p>
-        
-        <div style="margin-top: 15px; margin-bottom: 15px;">
+<body>
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-logo">Atlas Arena</span>
+        </div>
+        <div class="auth-buttons">
             <% if (locals.currentUser) { %>
-                <span style="font-weight: bold; margin-right: 15px;">
-                    Welcome to the Arena, <%= locals.currentUser.username %>!
+                <span class="welcome-message">
+                    Welcome, <%= locals.currentUser.username %>
                 </span>
-                <a href="/logout" style="padding: 8px 16px; background-color: #ff4c4c; color: white; border-radius: 5px; text-decoration: none; font-size: 14px;">Sign Out</a>
+                <a href="/logout" class="auth-button logout">Sign Out</a>
             <% } else { %>
-                <a href="/login" style="padding: 8px 16px; background-color: #0078D4; color: white; border-radius: 5px; text-decoration: none; font-size: 14px;">Sign In / Join Arena</a>
+                <a href="/login" class="auth-button login">Sign In / Join Arena</a>
             <% } %>
         </div>
     </header>
 
     <main>
-        <div id="map-placeholder">
-          <iframe 
-            src="/interactive-map?cities=<%= cities %>" 
-            style="border:1px solid black; width: 75vw; height: 40vw;">
-          </iframe>
-            <!-- <p>Interactive Map Component will be loaded here.</p> -->
-        </div>
-        <div></div>
+        <section class="hero">
+            <p>Explore cities around the world and test your knowledge in a map-based trivia experience. 
+                <br>
+                Click on a location to get started.</p>
+        </section>
 
-        <button type="button" onclick="alert('Start Game functionality coming soon!')">
-            Start Random Quiz
-        </button>
+        <div id="map-placeholder">
+            <iframe
+                src="/interactive-map?cities=<%= cities %>"
+                title="Interactive World Map">
+            </iframe>
+        </div>
+
+        <div class="action-section">
+            <button type="button" class="start-quiz-btn" onclick="alert('Start Game functionality coming soon!')">
+                Start Random Quiz
+            </button>
+        </div>
     </main>
 
     <section class="leaderboard">

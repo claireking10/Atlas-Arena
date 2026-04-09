@@ -1,12 +1,215 @@
-/* * Always set the map height explicitly to define the size of the div element
- * that contains the map. 
- */
-#gmp-map-3d {
-    height: 100%;
+/* Google Fonts - Roboto for consistency */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+/* CSS Variables matching main theme */
+:root {
+    --primary-bg: #1a1a1a;
+    --secondary-bg: #2a2a2a;
+    --accent-blue: #4285f4;
+    --accent-blue-dark: #3367d6;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --border-color: #404040;
+    --success-color: #34a853;
+    --danger-color: #ea4335;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --border-radius: 12px;
+    --transition: all 0.3s ease;
 }
+
+/* Map Container */
+#gmp-map-3d {
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Global Styles for Map Page */
 html,
 body {
     height: 100%;
     margin: 0;
     padding: 0;
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #2a2a2a 100%);
+    color: var(--text-primary);
+    overflow: hidden;
+}
+
+/* Popup Styles */
+.map-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(26, 26, 26, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 0;
+    display: none;
+    z-index: 1000;
+    width: 400px;
+    max-width: 90vw;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    font-family: 'Roboto', sans-serif;
+}
+
+.map-popup-content {
+    position: relative;
+    padding: 2rem;
+}
+
+.popup-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: var(--transition);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.popup-close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.popup-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+}
+
+.flag-placeholder {
+    width: 70px;
+    height: 48px;
+    background: linear-gradient(45deg, var(--accent-blue), var(--accent-blue-dark));
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    color: white;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.popup-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 95px);
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: center;
+    background: linear-gradient(45deg, var(--accent-blue), #8ab4f8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.popup-description {
+    margin: 0 0 2rem 0;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 400;
+}
+
+.popup-actions {
+    text-align: center;
+}
+
+.quiz-start-btn {
+    background: linear-gradient(45deg, var(--accent-blue), #8ab4f8);
+    color: white;
+    border: none;
+    padding: 0.875rem 2rem;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: 500;
+    font-family: 'Roboto', sans-serif;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    min-width: 140px;
+}
+
+.quiz-start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(66, 133, 244, 0.5);
+    background: linear-gradient(45deg, var(--accent-blue-dark), #7aa3f0);
+}
+
+.quiz-start-btn:active {
+    transform: translateY(0);
+}
+
+/* Responsive Design for Popup */
+@media (max-width: 480px) {
+    .map-popup {
+        width: 95vw;
+        margin: 1rem;
+    }
+
+    .map-popup-content {
+        padding: 1.5rem;
+    }
+
+    .popup-title {
+        font-size: 1.5rem;
+    }
+
+    .popup-description {
+        font-size: 0.9rem;
+    }
+
+    .popup-header {
+        gap: 0.75rem;
+    }
+
+    .flag-placeholder {
+        width: 50px;
+        height: 35px;
+        font-size: 0.7rem;
+    }
+}
+
+/* Loading Animation */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.loading {
+    animation: pulse 2s infinite;
+}
+
+/* Ensure map takes full space */
+#gmp-map-3d {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
 }

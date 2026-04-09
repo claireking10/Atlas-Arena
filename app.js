@@ -52,6 +52,12 @@ async function initDB() {
     }
 }
 
+app.get('/interactive-map', (req, res) => {
+    res.render('worldMap.ejs', { title: "Iframe Content" }); 
+});
+
+
+
 // Route: Top 5 users
 app.get('/', async (req, res) => {
     try {

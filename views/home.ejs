@@ -5,14 +5,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/styles.css">
-    <title>Atlas Arena - Map Trivia</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <title>Atlas Arena - Home</title>
     <style>
 body { font-family: sans-serif; text-align: center; }
         
     </style>
 </head>
-<body>
+<body style="background-color: white;">
     <header>
         <h1>Atlas Arena</h1>
         <p>A Map-based Trivia Web application</p>
@@ -31,8 +31,10 @@ body { font-family: sans-serif; text-align: center; }
 
     <main>
         <div id="map-placeholder">
-          <p>some text</p>
-          <%- include('worldMap') %>
+          <iframe 
+            src="/interactive-map" 
+            style="border:1px solid black; width: 75vw; height: 40vw;">
+          </iframe>
             <!-- <p>Interactive Map Component will be loaded here.</p> -->
         </div>
         <div></div>
@@ -72,23 +74,23 @@ body { font-family: sans-serif; text-align: center; }
         <p>&copy; 2026 Atlas Arena Project</p>
     </footer>
     <script>
-        const citiesTable = <%- JSON.stringify(typeof cities !== 'undefined' ? cities : []) %>;
-        
-        
-
-        function getEntry(idToFind) { 
-            
-            // Find the specific row in the array
-            const entry = citiesTable.find(item => item.name == idToFind);
-            
-            if (entry) {
-                return entry.description;
-                //document.getElementById('result').innerText = `Found: ${entry.name}`;
-            } else {
-                return "City Information not Retrieved";
-                //document.getElementById('result').innerText = "Entry not found.";
-            }
-        }
+        //const citiesTable = <%- JSON.stringify(typeof cities !== 'undefined' ? cities : []) %>;
+        //
+        //
+//
+        //function getEntry(idToFind) { 
+        //    
+        //    // Find the specific row in the array
+        //    const entry = citiesTable.find(item => item.name == idToFind);
+        //    
+        //    if (entry) {
+        //        return entry.description;
+        //        //document.getElementById('result').innerText = `Found: ${entry.name}`;
+        //    } else {
+        //        return "City Information not Retrieved";
+        //        //document.getElementById('result').innerText = "Entry not found.";
+        //    }
+        //}
     </script>
 </body>
 </html>

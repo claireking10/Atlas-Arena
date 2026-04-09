@@ -1,10 +1,19 @@
 body { font-family: sans-serif; text-align: center; }
 #map-placeholder { 
-    width: 400px; height: 400px; 
+    width: 80vw; height: 40vw; 
     position: relative;
-    background: #e0e0e0; margin: 20px auto; 
+    background: transparent; margin: 20px auto; 
     display: flex; align-items: center; justify-content: center;
 }
+
+iframe {
+  border-radius: 20px;
+  border: none; /* Optional: removes default border */
+  overflow: hidden; /* Helps ensure content doesn't bleed out */
+}
+
+
+
 #map-placeholder .pin-placeholder {
     position: absolute;
     background-color: transparent;

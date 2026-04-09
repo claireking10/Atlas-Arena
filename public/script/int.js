@@ -60,14 +60,9 @@ async function initMap() {
 
     document.body.append(map);
 
-    //document.addEventListener("DOMContentLoaded", () => {
-    //    const container = document.getElementById("map-placeholder");
-//
-    //    const div = document.createElement("div");
-    //    div.innerHTML = "hello";
-//
-    //    container.appendChild(div);
-    //});
+
+
+
 
 
 

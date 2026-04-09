@@ -51,9 +51,9 @@ async function initMap() {
         gestureHandling: 'COOPERATIVE',
     });
 
-    const newDiv = document.createElement("div");
-    newDiv.textContent = "table info: "+citiesTable;
-    document.body.appendChild(newDiv);
+    //const newDiv = document.createElement("div");
+    //newDiv.textContent = "table info: "+citiesTable;
+    //document.body.appendChild(newDiv);
 
 
 

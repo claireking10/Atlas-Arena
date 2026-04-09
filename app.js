@@ -123,7 +123,7 @@ app.get('/', async (req, res) => {
     }
 });
 
-const serverPort = process.env.PORT || 3000;
+const serverPort = process.env.PORT || 1433;
 
 async function startServer() {
     await initDB(); // ensure DB is ready first

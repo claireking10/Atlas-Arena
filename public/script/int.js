@@ -40,7 +40,7 @@ function addMarker(entry, Map3DElement, Marker3DInteractiveElement, map){
 export function randomPin(){
     const randomPin = citiesTable[Math.floor(Math.random() * citiesTable.length)];
     const cam = {
-        center: { lat: parseFloat(randomPin.posX), lng: parseFloat(randomPin.posY), altitude: 5000 },
+        center: { lat: parseFloat(randomPin.posX), lng: parseFloat(randomPin.posY), altitude: 7500 },
         range: 1500,
         tilt: 0,
         heading: 0,
@@ -74,7 +74,7 @@ async function initMap() {
     map = new Map3DElement({
         ...originalCamera,
         mode: 'SATELLITE',
-        gestureHandling: 'COOPERATIVE',
+        gestureHandling: 'GREEDY',
     });
 
     //const newDiv = document.createElement("div");

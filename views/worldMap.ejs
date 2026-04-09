@@ -5,12 +5,16 @@
 
         <link rel="stylesheet" type="text/css" href="/css/intStyle.css" />
         <script>
-          const citiesTable = <%- JSON.stringify(typeof cities !== 'undefined' ? cities : []) %>;
+            const citiesTable = <%- JSON.stringify(typeof cities !== 'undefined' ? cities : []) %>;
 
         </script>
-        <script type="module" src="/script/int.js">
+        <script type="module">
+            import { randomPin } from '/script/int.js';
+            //setTimeout(function() { randomPin(); }, 10000);
 
         </script>
+
+        <script></script>
     </head>
     <body>
         

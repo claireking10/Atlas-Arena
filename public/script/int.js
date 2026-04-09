@@ -7,7 +7,7 @@
 // @ts-nocheck
 // [START maps_3d_marker_click_event]
 
-function addMarker(entry, Map3DElement, Marker3DInteractiveElement){
+function addMarker(entry, Map3DElement, Marker3DInteractiveElement, map){
 // Create the interactive marker and set the attributes.
     
 
@@ -23,13 +23,39 @@ function addMarker(entry, Map3DElement, Marker3DInteractiveElement){
         label: entry.name,
     });
 
+
+
+
+
+
     // Specify the action to take on click.
     interactiveMarker.addEventListener('gmp-click', (event) => {
         alert(entry.description);
+        //randomPin(map);
     });
 
     return interactiveMarker;
 }
+
+export function randomPin(){
+    const randomPin = citiesTable[Math.floor(Math.random() * citiesTable.length)];
+    const cam = {
+        center: { lat: parseFloat(randomPin.posX), lng: parseFloat(randomPin.posY), altitude: 7500 },
+        range: 1500,
+        tilt: 0,
+        heading: 0,
+    };
+
+    
+    map.flyCameraTo({
+        endCamera: cam,
+        durationMillis: 10000,
+    });
+    
+}
+
+let map;
+
 
 async function initMap() {
     // Include the interactive marker class
@@ -45,10 +71,10 @@ async function initMap() {
         heading: 0,
     };
 
-    const map = new Map3DElement({
+    map = new Map3DElement({
         ...originalCamera,
         mode: 'SATELLITE',
-        gestureHandling: 'COOPERATIVE',
+        gestureHandling: 'GREEDY',
     });
 
     //const newDiv = document.createElement("div");
@@ -58,10 +84,10 @@ async function initMap() {
 
 
     citiesTable.forEach((element, index, array) => {
-        map.append(addMarker(element, Map3DElement, Marker3DInteractiveElement))
+        map.append(addMarker(element, Map3DElement, Marker3DInteractiveElement, map))
     });
 
-    map.append(addMarker({name: 'Test City', description: 'Test description', posX: '40', posY: '50'}, Map3DElement, Marker3DInteractiveElement));
+    //map.append(addMarker({name: 'Test City', description: 'Test description', posX: '40', posY: '50'}, Map3DElement, Marker3DInteractiveElement));
 
     document.body.append(map);
 
@@ -81,4 +107,12 @@ async function initMap() {
 
 //console.log("test");
 initMap();
+
+window.addEventListener("message", (event) => {
+    if (event.data === "runRandomPin") {
+        randomPin();
+    }
+});
+
+//setTimeout(function() { randomPin(); }, 10000);
 // [END maps_3d_marker_click_event]

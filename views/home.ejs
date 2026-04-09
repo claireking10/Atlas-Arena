@@ -21,7 +21,7 @@ body { font-family: sans-serif; text-align: center; }
     <main>
         <div id="map-placeholder">
           <iframe 
-            src="/interactive-map" 
+            src="/interactive-map?cities=<%= cities %>" 
             style="border:1px solid black; width: 75vw; height: 40vw;">
           </iframe>
             <!-- <p>Interactive Map Component will be loaded here.</p> -->
@@ -63,7 +63,7 @@ body { font-family: sans-serif; text-align: center; }
         <p>&copy; 2026 Atlas Arena Project</p>
     </footer>
     <script>
-        //const citiesTable = <%- JSON.stringify(typeof cities !== 'undefined' ? cities : []) %>;
+        const citiesTable = <%- JSON.stringify(typeof cities !== 'undefined' ? cities : []) %>;
         //
         //
 //

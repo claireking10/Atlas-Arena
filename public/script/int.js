@@ -51,7 +51,12 @@ async function initMap() {
         gestureHandling: 'COOPERATIVE',
     });
 
-    
+    const newDiv = document.createElement("div");
+    newDiv.textContent = "table info: "+citiesTable;
+    document.body.appendChild(newDiv);
+
+
+
     citiesTable.forEach((element, index, array) => {
         map.append(addMarker(element, Map3DElement, Marker3DInteractiveElement))
     });

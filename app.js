@@ -67,10 +67,26 @@ app.get('/interactive-map', async (req, res) => {
     }
 });
 
-app.get('/quiz', (req, res) => { // called when start quiz button is pushed.
+app.get('/quiz', async (req, res) => { // called when start quiz button is pushed.
     const city = JSON.parse(req.query.city);
-    console.log(city.name);
-    res.render('quiz', { city: city });
+    try {
+        if (!pool) {
+            throw new Error("Database connection not established");
+        }
+        const result2 = await pool.request().query(`SELECT * FROM cities WHERE name != '${city.name}'`);
+        const result = await pool.request().query('SELECT TOP 5 * FROM questions ORDER BY NEWID();');
+        res.render('quiz', { city: city, questions: result.recordset, cities: result2.recordset });
+    } catch (err) {
+        console.error('Quiz Error:', err);
+        res.status(500).render('quiz', { city: city, questions: [], cities: [], error: "Currently unable to load leaderboard." });
+    }
+    
+    
+    
+    
+    
+    //console.log(city.name);
+    //res.render('quiz', { city: city });
 });
 
 

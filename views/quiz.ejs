@@ -1,6 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+    <title><%= city.name %></title>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            background-color: white;
+        }
+
+        .quiz-container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+        }
+
+        .flag-placeholder img {
+            width: 200px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .answers button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background-color: #0078D4;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .answers button:hover {
+            background-color: #005fa3;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .next-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+    </style>
+
+    <script>
+        const cityInfo = <%- JSON.stringify(typeof city !== 'undefined' ? city : {}) %>;
+        const citiesTable = <%- JSON.stringify(typeof cities !== 'undefined' ? cities : []) %>;
+        const questionsTable = <%- JSON.stringify(typeof questions !== 'undefined' ? questions : []) %>;
+        const answers = [cityInfo[questionsTable[0].field], ...citiesTable.map(item => item[questionsTable[0].field]).slice(0,3)].sort(() => Math.random() - 0.5)
+        // Placeholder question data
+        const questionData = {
+            question: questionsTable[0].question,
+            answers: answers,
+            correct: answers.indexOf(cityInfo[questionsTable[0].field]),
+        };
+    </script>
+</head>
+
+<body>
+
+    <main>
+        <div class="quiz-container">
+            <h2><%= city.name %></h2>
+
+            <div class="flag-placeholder">
+                <img src="/images/<%= city.img %>" alt="City Image">
+            </div>
+
+            <h3 id="question"></h3>
+
+            <div class="answers" id="answers"></div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <button class="next-btn" onclick="nextQuestion()">Next Question</button>
+        </div>
+    </main>
+
+    <script>
+        function loadQuestion() {
+            document.getElementById("question").innerText = questionData.question;
+
+            const answersDiv = document.getElementById("answers");
+            answersDiv.innerHTML = "";
+
+            questionData.answers.forEach((answer, index) => {
+                const btn = document.createElement("button");
+                btn.innerText = answer;
+                btn.onclick = () => checkAnswer(index);
+                answersDiv.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected) {
+            const feedback = document.getElementById("feedback");
+
+            if (selected === questionData.correct) {
+                feedback.innerText = "✅ Correct!";
+                feedback.style.color = "green";
+            } else {
+                feedback.innerText = "❌ Wrong!";
+                feedback.style.color = "red";
+            }
+        }
+
+        function nextQuestion() {
+            location.reload();
+            //alert("Next question coming soon (hook this to backend or new data)");
+        }
+
+        // Initialize
+        loadQuestion();
+    </script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+<!--
+
+<!DOCTYPE html>
+<html lang="en">
+
 
 <head>
     <meta charset="UTF-8">
@@ -16,25 +163,10 @@
 
 </head>
 <body style="background-color: white;">
-    <!--<header>
-        <h1>Quiz Screen</h1>
-        <p>A Map-based Trivia Web application</p>
-        
-        <div style="margin-top: 15px; margin-bottom: 15px;">
-            <% if (locals.currentUser) { %>
-                <span style="font-weight: bold; margin-right: 15px;">
-                    Welcome to the Arena, <%= locals.currentUser.username %>!
-                </span>
-                <a href="/logout" style="padding: 8px 16px; background-color: #ff4c4c; color: white; border-radius: 5px; text-decoration: none; font-size: 14px;">Sign Out</a>
-            <% } else { %>
-                <a href="/login" style="padding: 8px 16px; background-color: #0078D4; color: white; border-radius: 5px; text-decoration: none; font-size: 14px;">Sign In / Join Arena</a>
-            <% } %>
-        </div>
-    </header> -->
 
     <main>
         <p>Here is a quiz page for <%= city.name %>!</p>
-        <div>
+        <div class="flag-placeholder">
             <img src="/images/<%= city.img %>">
         </div>
 
@@ -42,12 +174,6 @@
             Next Question
         </button>
     </main>
-
-    
-
-    <footer>
-        <p>&copy; 2026 Atlas Arena Project</p>
-    </footer>
 
     <script>
         

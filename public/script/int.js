@@ -23,15 +23,8 @@ function addMarker(entry, Map3DElement, Marker3DInteractiveElement, map){
         label: entry.name,
     });
 
-
-
-
-
-
-    // Specify the action to take on click.
     interactiveMarker.addEventListener('gmp-click', (event) => {
-        alert(entry.description);
-        //randomPin(map);
+        showMapPopup(entry);
     });
 
     return interactiveMarker;
@@ -98,16 +91,42 @@ async function initMap() {
         map.append(addMarker(element, Map3DElement, Marker3DInteractiveElement, map))
     });
 
-    //map.append(addMarker({name: 'Test City', description: 'Test description', posX: '40', posY: '50'}, Map3DElement, Marker3DInteractiveElement));
+    map.append(addMarker({name: 'Test City', description: 'Indonesia\'s sprawling, sinking capital on the northwest coast of Java is one of the worlds most chaotic and captivating megacities. Home to over 30 million in its metro area, it is a city of extreme contrasts with its gleaming malls beside flooding kampung.', posX: '40', posY: '50'}, Map3DElement, Marker3DInteractiveElement));
 
     document.body.append(map);
 
+    // Create popup div
+    const popup = document.createElement('div');
+    popup.className = 'map-popup';
+    document.body.appendChild(popup);
 
+    // Function to show popup
+    window.showMapPopup = (entry) => {
+        popup.innerHTML = `
+            <div class="map-popup-content">
+                <button class="popup-close-btn">&times;</button>
+                <div class="popup-header">
+                    <div class="flag-placeholder">🇺🇸</div>
+                    <h3 class="popup-title">${entry.name}</h3>
+                </div>
+                <p class="popup-description">${entry.description}</p>
+                <div class="popup-actions">
+                    <button class="quiz-start-btn">Start Quiz</button>
+                </div>
+            </div>
+        `;
+        popup.style.display = 'block';
 
+        const closeBtn = popup.querySelector('.popup-close-btn');
+        closeBtn.addEventListener('click', () => {
+            popup.style.display = 'none';
+        });
 
-
-
-
+        const startBtn = popup.querySelector('.quiz-start-btn');
+        startBtn.addEventListener('click', () => {
+            alert('Starting quiz for ' + entry.name);
+        });
+    };
 
     //const newDiv = document.createElement("div");
     //newDiv.textContent = "table info: "+addMarker({name: 'Test City', description: 'Test description', posX: '40', posY: '50'}, Map3DElement, Marker3DInteractiveElement);

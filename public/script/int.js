@@ -154,6 +154,7 @@ async function initMap() {
 
         const startBtn = popup.querySelector('.quiz-start-btn');
         startBtn.addEventListener('click', () => {
+            popup.style.display = 'none';
             startQuiz(entry);
         });
     };

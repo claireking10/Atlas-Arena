@@ -1,14 +1,14 @@
-//import sql from 'mssql';
+
 require('dotenv').config();
+
 const sql = require('mssql');
 const express = require('express');
 const { auth } = require('express-openid-connect');
 const app = express();
 
-const server = process.env.AZURE_SQL_SERVER;
-const database = process.env.AZURE_SQL_DATABASE;
-const port = parseInt(process.env.AZURE_SQL_PORT);
-const authenticationType = process.env.AZURE_SQL_AUTHENTICATIONTYPE;
+var dbCities = require('./database.js').dbCities;
+var dbQuiz = require('./database.js').dbQuiz;
+var initDB = require('./database.js').initDB;
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'))
@@ -27,104 +27,49 @@ const authConfig = {
 // Initialize Auth0 router (this automatically creates /login and /logout routes)
 app.use(auth(authConfig));
 
-// For system-assigned managed identity.
-const config = {
-    server,
-    port,
-    database,
-    authentication: {
-        type: authenticationType
-    },
-    options: {
-        encrypt: true
-    }
-};  
 
-let pool; // shared connection
-
-// Initialize DB connection once
-async function initDB() {
-    try {
-        pool = await sql.connect(config);
-        console.log('Connected to database');
-    } catch (err) {
-        console.error('DB connection failed:', err);
-    }
-}
+var getPool = require('./database.js').getPool;
 
 app.get('/interactive-map', async (req, res) => {
-
-    try {
-        if (!pool) {
-            throw new Error("Database connection not established");
-        }
-        const result2 = await pool.request()
-            .query('SELECT * FROM cities');
-        res.render('worldMap', { cities: result2.recordset });
-    } catch (err) {
-        console.error('Home page error:', err);
-        res.status(500).render('worldMap', { cities: [], error: "Currently unable to load leaderboard." });
-    }
+    const cities = await dbCities();
+    res.render('worldMap', { cities });
 });
 
 app.get('/quiz', async (req, res) => { // called when start quiz button is pushed.
     const city = JSON.parse(req.query.city);
-    try {
-        if (!pool) {
-            throw new Error("Database connection not established");
-        }
-        const result2 = await pool.request().query(`SELECT * FROM cities WHERE name != '${city.name}'`);
-        const result = await pool.request().query('SELECT TOP 5 * FROM questions ORDER BY NEWID();');
-        res.render('quiz', { city: city, questions: result.recordset, cities: result2.recordset });
-    } catch (err) {
-        console.error('Quiz Error:', err);
-        res.status(500).render('quiz', { city: city, questions: [], cities: [], error: "Currently unable to load leaderboard." });
-    }
-    
-    
-    
-    
-    
-    //console.log(city.name);
-    //res.render('quiz', { city: city });
+    const result = await dbQuiz(city);
+    //console.log(result);
+    res.render('quiz', result);
 });
-
-
-
 
 
 // Route: Top 5 users
 app.get('/', async (req, res) => {
+    const pool = getPool();
     try {
         if (!pool) {
             throw new Error("Database connection not established");
         }
-
         let currentUser = null;
-
         // 1. Check if the user is logged in via Auth0
         if (req.oidc.isAuthenticated()) {
             const { sub, nickname, name } = req.oidc.user;
-            
             // 2. Check if this specific user is in your Azure SQL database
             const checkUser = await pool.request()
                 .input('auth0_id', sql.VarChar, sub)
                 .query('SELECT * FROM users WHERE auth0_id = @auth0_id');
-
             if (checkUser.recordset.length === 0) {
                 // 3. New User: Insert them into the database and get the row back
                 const insertUser = await pool.request()
                     .input('auth0_id', sql.VarChar, sub)
                     .input('username', sql.VarChar, nickname || name)
                     .query('INSERT INTO users (auth0_id, username, totalScore, showOnLeaderboard) OUTPUT INSERTED.* VALUES (@auth0_id, @username, 0, 1)');
-                
                 currentUser = insertUser.recordset[0];
             } else {
                 // 4. Returning User: Grab their existing database record
                 currentUser = checkUser.recordset[0];
             }
         }
-
         // 5. Fetch leaderboard (Top 5) and cities map data
         const result = await pool.request().query('SELECT TOP 5 * FROM users ORDER BY totalScore DESC');
         const result2 = await pool.request().query('SELECT * FROM cities');
@@ -140,6 +85,8 @@ app.get('/', async (req, res) => {
         res.status(500).render('home', { users: [], cities: [], currentUser: null, error: "Currently unable to load leaderboard." });
     }
 });
+
+
 
 const serverPort = process.env.PORT || 1433;
 

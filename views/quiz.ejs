@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/style.css">
     <title><%= city.name %></title>
-
+    <!-- TO DO: Move to new css file-->
     <style>
         body {
             font-family: sans-serif;
@@ -211,7 +211,7 @@
             });
 
             const feedback = document.getElementById("feedback");
-            feedback.innerText = isCorrect ? "✅ Correct!" : "❌ Wrong!";
+            feedback.innerText = isCorrect ? "Correct!" : "Wrong!";
             feedback.style.color = isCorrect ? "green" : "red";
 
             recordedAnswers.push({
@@ -271,7 +271,7 @@
 
             if (data.recorded) {
                 if (data.isNewHighScore) {
-                    parts.push('<p class="new-high">🎉 New high score for ' + escapeHtml(cityInfo.name) +
+                    parts.push('<p class="new-high">New high score for ' + escapeHtml(cityInfo.name) +
                         '! Previous best: ' + data.previousBest + '</p>');
                 } else {
                     parts.push('<p>Your best for ' + escapeHtml(cityInfo.name) + ': ' + data.previousBest + '</p>');
@@ -293,7 +293,7 @@
 
             parts.push('<div class="summary-actions">');
             parts.push('<button class="play-again" onclick="location.reload()">Play Again</button>');
-            parts.push('<button class="back-to-map" onclick="location.href=\'/\'">Back to Map</button>');
+            parts.push('<button class="back-to-map" onclick="location.href=\'/interactive-map\'">Back to Map</button>');
             parts.push('</div>');
 
             document.getElementById("summary-content").innerHTML = parts.join('');

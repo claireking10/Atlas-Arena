@@ -107,8 +107,8 @@ async function initMap() {
 
     map = new Map3DElement({
         ...originalCamera,
-        mode: 'SATELLITE',
-        gestureHandling: 'GREEDY',
+        mode: 'SATELLITE', // dont include built in markers
+        gestureHandling: 'GREEDY', // scroll to zoom instead of pinch
     });
 
     //const newDiv = document.createElement("div");
@@ -121,7 +121,7 @@ async function initMap() {
         map.append(addMarker(element, Map3DElement, Marker3DInteractiveElement, map))
     });
 
-    map.append(addMarker({name: 'Test City', description: 'Indonesia\'s sprawling, sinking capital on the northwest coast of Java is one of the worlds most chaotic and captivating megacities. Home to over 30 million in its metro area, it is a city of extreme contrasts with its gleaming malls beside flooding kampung.', posX: '40', posY: '50'}, Map3DElement, Marker3DInteractiveElement));
+    // test city used to go here :(
 
     document.body.append(map);
 

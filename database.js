@@ -70,8 +70,65 @@ async function getQuiz(city) {
     }
 }
 
+async function getCityById(id) {
+    try {
+        if (!pool) {
+            throw new Error("Database connection not established");
+        }
+        const result = await pool.request()
+            .input('id', sql.Int, id)
+            .query('SELECT * FROM cities WHERE id = @id');
+        return result.recordset[0] || null;
+    } catch (err) {
+        console.error('Error fetching city by id:', err);
+        return null;
+    }
+}
 
+async function submitQuiz({ auth0_id, cityName, score }) {
+    if (!pool) {
+        throw new Error("Database connection not established");
+    }
+    const tx = new sql.Transaction(pool);
+    await tx.begin();
+    try {
+        const prev = await new sql.Request(tx)
+            .input('auth0_id', sql.NVarChar, auth0_id)
+            .input('city_name', sql.NVarChar, cityName)
+            .query('SELECT MAX(score) AS prevBest FROM quiz_scores WHERE auth0_id = @auth0_id AND city_name = @city_name');
+        const previousBest = prev.recordset[0].prevBest || 0;
+
+        await new sql.Request(tx)
+            .input('auth0_id', sql.NVarChar, auth0_id)
+            .input('city_name', sql.NVarChar, cityName)
+            .input('score', sql.Int, score)
+            .query('INSERT INTO quiz_scores (auth0_id, city_name, score) VALUES (@auth0_id, @city_name, @score)');
+
+        await new sql.Request(tx)
+            .input('auth0_id', sql.NVarChar, auth0_id)
+            .query(`
+                UPDATE users
+                SET totalScore = (
+                    SELECT COALESCE(SUM(best), 0) FROM (
+                        SELECT MAX(score) AS best
+                        FROM quiz_scores
+                        WHERE auth0_id = @auth0_id
+                        GROUP BY city_name
+                    ) AS bests
+                )
+                WHERE auth0_id = @auth0_id
+            `);
+
+        await tx.commit();
+        return { previousBest };
+    } catch (err) {
+        await tx.rollback();
+        throw err;
+    }
+}
 
 
 exports.dbCities = getCities;
 exports.dbQuiz = getQuiz;
+exports.dbCityById = getCityById;
+exports.dbSubmitQuiz = submitQuiz;

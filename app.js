@@ -8,10 +8,13 @@ const app = express();
 
 var dbCities = require('./database.js').dbCities;
 var dbQuiz = require('./database.js').dbQuiz;
+var dbCityById = require('./database.js').dbCityById;
+var dbSubmitQuiz = require('./database.js').dbSubmitQuiz;
 var initDB = require('./database.js').initDB;
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'))
+app.use(express.json())
 
 // Auth0 Configuration uses dotenv stuff
 const authConfig = {
@@ -40,6 +43,50 @@ app.get('/quiz', async (req, res) => { // called when start quiz button is pushe
     const result = await dbQuiz(city);
     //console.log(result);
     res.render('quiz', result);
+});
+
+app.post('/quiz/submit', async (req, res) => {
+    try {
+        const { cityId, answers } = req.body || {};
+        if (!Number.isInteger(cityId) || !Array.isArray(answers)) {
+            return res.status(400).json({ error: 'invalid payload' });
+        }
+
+        const city = await dbCityById(cityId);
+        if (!city) {
+            return res.status(404).json({ error: 'city not found' });
+        }
+
+        const perQuestion = answers.slice(0, 5).map(a => {
+            const field = String(a && a.field || '');
+            const correctValue = city[field];
+            const isCorrect = correctValue != null && a.selectedAnswer === correctValue;
+            const elapsedMs = Math.max(0, Number(a && a.elapsedMs) || 0);
+            const points = isCorrect ? Math.max(20, Math.round(100 - elapsedMs / 200)) : 0;
+            return { field, correct: isCorrect, points, elapsedMs };
+        });
+        const score = perQuestion.reduce((s, q) => s + q.points, 0);
+
+        let recorded = false;
+        let previousBest = 0;
+        if (req.oidc.isAuthenticated()) {
+            const auth0_id = req.oidc.user.sub;
+            const result = await dbSubmitQuiz({ auth0_id, cityName: city.name, score });
+            previousBest = result.previousBest;
+            recorded = true;
+        }
+
+        res.json({
+            recorded,
+            score,
+            perQuestion,
+            previousBest,
+            isNewHighScore: recorded && score > previousBest
+        });
+    } catch (err) {
+        console.error('Quiz submit error:', err);
+        res.status(500).json({ error: 'submit failed' });
+    }
 });
 
 

@@ -59,31 +59,75 @@
             border-radius: 6px;
             cursor: pointer;
         }
+
+        .next-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .progress {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .answers button.correct {
+            background-color: #4caf50;
+        }
+
+        .answers button.wrong {
+            background-color: #e53935;
+        }
+
+        .answers button:disabled {
+            cursor: default;
+            opacity: 0.9;
+        }
+
+        .summary-list {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+        }
+
+        .summary-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .summary-actions button {
+            margin: 6px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .summary-actions .play-again { background-color: #0078D4; }
+        .summary-actions .back-to-map { background-color: #4caf50; }
+
+        .new-high { color: #d4a017; font-weight: bold; }
     </style>
 
     <script>
         const cityInfo = <%- JSON.stringify(typeof city !== 'undefined' ? city : {}) %>;
         const citiesTable = <%- JSON.stringify(typeof cities !== 'undefined' ? cities : []) %>;
         const questionsTable = <%- JSON.stringify(typeof questions !== 'undefined' ? questions : []) %>;
-        const answers = [cityInfo[questionsTable[0].field], ...citiesTable.map(item => item[questionsTable[0].field]).slice(0,3)].sort(() => Math.random() - 0.5)
-        // Placeholder question data
-        const questionData = {
-            question: questionsTable[0].question,
-            answers: answers,
-            correct: answers.indexOf(cityInfo[questionsTable[0].field]),
-        };
     </script>
 </head>
 
 <body>
 
     <main>
-        <div class="quiz-container">
+        <div class="quiz-container" id="quiz-screen">
             <h2><%= city.name %></h2>
 
             <div class="flag-placeholder">
                 <img src="/images/<%= city.img %>" alt="City Image">
             </div>
+
+            <div class="progress" id="progress"></div>
 
             <h3 id="question"></h3>
 
@@ -91,44 +135,186 @@
 
             <div class="feedback" id="feedback"></div>
 
-            <button class="next-btn" onclick="nextQuestion()">Next Question</button>
+            <button class="next-btn" id="next-btn" onclick="nextQuestion()" style="display:none;">Next Question</button>
+        </div>
+
+        <div class="quiz-container" id="summary-screen" style="display:none;">
+            <div id="summary-content"></div>
         </div>
     </main>
 
     <script>
+        let currentIndex = 0;
+        let questionStartTime = 0;
+        let locked = false;
+        let submitting = false;
+        const recordedAnswers = [];
+
+        function buildChoices(question) {
+            const correct = cityInfo[question.field];
+            const seen = new Set([correct]);
+            const wrongs = [];
+            for (const c of citiesTable) {
+                const v = c[question.field];
+                if (v != null && !seen.has(v)) {
+                    seen.add(v);
+                    wrongs.push(v);
+                }
+            }
+            const shuffledWrongs = wrongs.sort(() => Math.random() - 0.5).slice(0, 3);
+            return [correct, ...shuffledWrongs].sort(() => Math.random() - 0.5);
+        }
+
         function loadQuestion() {
-            document.getElementById("question").innerText = questionData.question;
+            const q = questionsTable[currentIndex];
+            document.getElementById("progress").innerText =
+                "Question " + (currentIndex + 1) + " of " + questionsTable.length;
+            document.getElementById("question").innerText = q.question;
 
             const answersDiv = document.getElementById("answers");
             answersDiv.innerHTML = "";
 
-            questionData.answers.forEach((answer, index) => {
+            const choices = buildChoices(q);
+            choices.forEach(choice => {
                 const btn = document.createElement("button");
-                btn.innerText = answer;
-                btn.onclick = () => checkAnswer(index);
+                btn.innerText = choice == null ? "" : choice;
+                btn.onclick = () => checkAnswer(choice, btn);
                 answersDiv.appendChild(btn);
             });
+
+            document.getElementById("feedback").innerText = "";
+            const nextBtn = document.getElementById("next-btn");
+            nextBtn.style.display = "none";
+            nextBtn.disabled = false;
+            nextBtn.innerText = (currentIndex === questionsTable.length - 1) ? "See Results" : "Next Question";
+
+            locked = false;
+            questionStartTime = Date.now();
         }
 
-        function checkAnswer(selected) {
-            const feedback = document.getElementById("feedback");
+        function checkAnswer(selectedAnswer, btn) {
+            if (locked) return;
+            locked = true;
+            const elapsedMs = Date.now() - questionStartTime;
+            const q = questionsTable[currentIndex];
+            const correctValue = cityInfo[q.field];
+            const isCorrect = selectedAnswer === correctValue;
 
-            if (selected === questionData.correct) {
-                feedback.innerText = "✅ Correct!";
-                feedback.style.color = "green";
+            const allButtons = document.querySelectorAll('#answers button');
+            allButtons.forEach(b => {
+                b.disabled = true;
+                if (b.innerText === String(correctValue)) {
+                    b.classList.add('correct');
+                } else if (b === btn) {
+                    b.classList.add('wrong');
+                }
+            });
+
+            const feedback = document.getElementById("feedback");
+            feedback.innerText = isCorrect ? "✅ Correct!" : "❌ Wrong!";
+            feedback.style.color = isCorrect ? "green" : "red";
+
+            recordedAnswers.push({
+                field: q.field,
+                selectedAnswer: selectedAnswer,
+                elapsedMs: elapsedMs
+            });
+
+            document.getElementById("next-btn").style.display = "inline-block";
+        }
+
+        async function nextQuestion() {
+            if (currentIndex < questionsTable.length - 1) {
+                currentIndex++;
+                loadQuestion();
             } else {
-                feedback.innerText = "❌ Wrong!";
-                feedback.style.color = "red";
+                await submitQuiz();
             }
         }
 
-        function nextQuestion() {
-            location.reload();
-            //alert("Next question coming soon (hook this to backend or new data)");
+        async function submitQuiz() {
+            if (submitting) return;
+            submitting = true;
+            document.getElementById("next-btn").disabled = true;
+
+            document.getElementById("quiz-screen").style.display = "none";
+            const summary = document.getElementById("summary-screen");
+            summary.style.display = "block";
+            document.getElementById("summary-content").innerText = "Submitting...";
+
+            try {
+                const res = await fetch('/quiz/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        cityId: cityInfo.id,
+                        answers: recordedAnswers
+                    })
+                });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                renderSummary(data);
+            } catch (err) {
+                document.getElementById("summary-content").innerHTML =
+                    '<h2>Quiz Complete</h2>' +
+                    '<p>Failed to submit your score. Refresh to try again.</p>' +
+                    '<div class="summary-actions">' +
+                    '<button class="back-to-map" onclick="location.href=\'/\'">Back to Map</button>' +
+                    '</div>';
+            }
         }
 
-        // Initialize
-        loadQuestion();
+        function renderSummary(data) {
+            const parts = [];
+            parts.push('<h2>Quiz Complete!</h2>');
+            parts.push('<p style="font-size: 22px;"><strong>Score: ' + data.score + ' / 500</strong></p>');
+
+            if (data.recorded) {
+                if (data.isNewHighScore) {
+                    parts.push('<p class="new-high">🎉 New high score for ' + escapeHtml(cityInfo.name) +
+                        '! Previous best: ' + data.previousBest + '</p>');
+                } else {
+                    parts.push('<p>Your best for ' + escapeHtml(cityInfo.name) + ': ' + data.previousBest + '</p>');
+                }
+            } else {
+                parts.push('<p style="font-style: italic; color: #666;">Log in to save your scores to the leaderboard.</p>');
+            }
+
+            parts.push('<h3>Breakdown</h3>');
+            parts.push('<ul class="summary-list">');
+            data.perQuestion.forEach((q, i) => {
+                const qText = (questionsTable[i] && questionsTable[i].question) || q.field;
+                const seconds = (q.elapsedMs / 1000).toFixed(1);
+                const icon = q.correct ? '✅' : '❌';
+                parts.push('<li>' + (i + 1) + '. ' + escapeHtml(qText) +
+                    ' — ' + icon + ' <strong>' + q.points + ' pts</strong> (' + seconds + 's)</li>');
+            });
+            parts.push('</ul>');
+
+            parts.push('<div class="summary-actions">');
+            parts.push('<button class="play-again" onclick="location.reload()">Play Again</button>');
+            parts.push('<button class="back-to-map" onclick="location.href=\'/\'">Back to Map</button>');
+            parts.push('</div>');
+
+            document.getElementById("summary-content").innerHTML = parts.join('');
+        }
+
+        function escapeHtml(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        if (questionsTable.length === 0) {
+            document.getElementById("quiz-screen").innerHTML =
+                '<h2>No questions available</h2><p>Try another city.</p>' +
+                '<button onclick="location.href=\'/\'">Back to Map</button>';
+        } else {
+            loadQuestion();
+        }
     </script>
 
 </body>

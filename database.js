@@ -133,8 +133,56 @@ async function submitQuiz({ auth0_id, cityName, score }) {
     }
 }
 
+// user profile functions
+async function getUserProfile(auth0_id) {
+    try {
+        if (!pool) throw new Error("Database connection not established");
+        const result = await pool.request()
+            .input('auth0_id', sql.NVarChar, auth0_id)
+            .query(`
+                SELECT 
+                    u.username,
+                    u.totalScore,
+                    u.createdAt,
+                    COUNT(qs.id) AS gamesPlayed
+                FROM users u
+                LEFT JOIN quiz_scores qs ON qs.auth0_id = u.auth0_id
+                WHERE u.auth0_id = @auth0_id
+                GROUP BY u.username, u.totalScore, u.createdAt
+            `);
+        return result.recordset[0] || null;
+    } catch (err) {
+        console.error('Error fetching user profile:', err);
+        return null;
+    }
+}
+
+// get or create user
+// Create user if they don't exist, otherwise just return their data from DB
+async function getOrCreateUser(pool, auth0_id, username) {
+    if (!pool) throw new Error("Database connection not established");
+
+    // Only inserts if the user doesn't exist yet — never overwrites username
+    await pool.request()
+        .input('auth0_id', sql.NVarChar, auth0_id)
+        .input('username', sql.NVarChar, username)
+        .query(`
+            IF NOT EXISTS (SELECT 1 FROM users WHERE auth0_id = @auth0_id)
+                INSERT INTO users (auth0_id, username, totalScore, createdAt)
+                VALUES (@auth0_id, @username, 0, GETDATE())
+        `);
+
+    const result = await pool.request()
+        .input('auth0_id', sql.NVarChar, auth0_id)
+        .query('SELECT * FROM users WHERE auth0_id = @auth0_id');
+
+    return result.recordset[0];
+}
+
 // export functions to app.js
 exports.dbCities = getCities;
 exports.dbQuiz = getQuiz;
 exports.dbCityById = getCityById;
 exports.dbSubmitQuiz = submitQuiz;
+exports.dbUserProfile = getUserProfile;
+exports.dbGetOrCreateUser = getOrCreateUser;

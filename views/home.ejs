@@ -1,30 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/style.css">
-    <title>Atlas Arena - Home</title>
-</head>
-<body>
-    <header class="topbar">
-        <div class="brand">
-            <span class="brand-logo">Atlas Arena</span>
-        </div>
-        <div class="auth-buttons">
-            <% if (locals.currentUser) { %>
-                <span class="welcome-message">
-                    Welcome, <%= locals.currentUser.username %>
-                </span>
-                <a href="/logout" class="auth-button logout">Sign Out</a>
-            <% } else { %>
-                <a href="/login" class="auth-button login">Sign In / Join Arena</a>
-            <% } %>
-        </div>
-    </header>
-
+<%- include('../partials/header', { page_title: "Home" }) %>
     <main>
         <section class="hero">
             <p>Explore cities around the world and test your knowledge in a map-based trivia experience. 
@@ -33,7 +7,7 @@
         </section>
 
         <div id="map-placeholder">
-            <!-- <p>Interactive Map Component will be loaded here.</p> -->
+            <!-- Interactive Map Component will be loaded here -->
 
             <iframe id="fram"
                 src="/interactive-map?cities=<%= cities %>" 
@@ -74,19 +48,12 @@
         </table>
     </section>
 
-    <footer>
-        <p>&copy; 2026 Atlas Arena Project</p>
-    </footer>
-
     <script>
         // get a reference to the iframe to interact with the map
         const iframe = document.getElementById("fram");
         
     </script>
-
-
-</body>
-</html>
+<%- include('../partials/footer') %>
 
 
 

@@ -4,8 +4,9 @@ require('dotenv').config();
 // required imports from other files
 const sql = require('mssql');
 const express = require('express');
-const { auth } = require('express-openid-connect');
+const { auth, requiresAuth } = require('express-openid-connect');
 const app = express();
+var getOrCreateUser = require('./database.js').dbGetOrCreateUser;
 
 var dbCities = require('./database.js').dbCities;
 var dbQuiz = require('./database.js').dbQuiz;
@@ -13,11 +14,13 @@ var dbCityById = require('./database.js').dbCityById;
 var dbSubmitQuiz = require('./database.js').dbSubmitQuiz;
 var initDB = require('./database.js').initDB;
 
+// import pool to use requests (needed until all requests moved to database.js)
+var getPool = require('./database.js').getPool;
+
 app.set('view engine', 'ejs');
 app.use(express.static('public'))
 app.use(express.json())
-
-// end imports
+app.use(express.urlencoded({ extended: true }));
 
 // Auth0 Configuration using dotenv
 const authConfig = {
@@ -33,8 +36,66 @@ const authConfig = {
 // Initialize Auth0 router (this automatically creates /login and /logout routes)
 app.use(auth(authConfig));
 
-// import pool to use requests (needed until all requests moved to database.js)
-var getPool = require('./database.js').getPool;
+// get the current user's username. if not, get the nickname (part before the @ in their email)
+function getPreferredUsername(user) {
+    return ( 
+        user?.username ||                
+        user?.nickname
+    );
+}
+
+// set currentuser for all views
+app.use(async (req, res, next) => {
+    try {
+        if (req.oidc.isAuthenticated()) {
+            const pool = getPool();
+            const sub = req.oidc.user.sub;
+            const username = getPreferredUsername(req.oidc.user);
+            res.locals.currentUser = await getOrCreateUser(pool, sub, username);
+        } else {
+            res.locals.currentUser = null;
+        }
+    } catch (err) {
+        console.error('Auth middleware error:', err);
+        res.locals.currentUser = null;
+    }
+    next();
+});
+
+// help to get preferred username
+app.get('/profile', requiresAuth(), async (req, res) => {
+    const auth0_id = req.oidc.user.sub;
+    const pool = getPool();
+// returns user if they exist, otherwise creates them & returns
+    const user = await getOrCreateUser(
+        pool,
+        auth0_id,
+        getPreferredUsername(req.oidc.user)
+    );
+// get number of games played
+    const statsResult = await pool.request()
+        .input('auth0_id', sql.NVarChar, auth0_id)
+        .query('SELECT COUNT(*) AS gamesPlayed FROM quiz_scores WHERE auth0_id = @auth0_id');
+    const gamesPlayed = statsResult.recordset[0].gamesPlayed;
+
+    res.render('profile', {
+        user: { ...user, gamesPlayed },
+        currentUser: user
+    });
+});
+
+app.post('/profile/edit', requiresAuth(), async (req, res) => {
+    const auth0_id = req.oidc.user.sub;
+    const { username } = req.body;
+    const pool = getPool();
+
+    // edit profile route allows user to change their username
+    await pool.request()
+        .input('auth0_id', sql.NVarChar, auth0_id)
+        .input('username', sql.NVarChar, username)
+        .query('UPDATE users SET username = @username WHERE auth0_id = @auth0_id');
+    res.redirect('/profile');
+});
 
 // render the world map when requested inside the iframe
 app.get('/interactive-map', async (req, res) => {
@@ -106,48 +167,25 @@ app.post('/quiz/submit', async (req, res) => {
 app.get('/', async (req, res) => {
     const pool = getPool();
     try {
-        if (!pool) {
-            throw new Error("Database connection not established");
-        }
-        let currentUser = null;
-        // 1. Check if the user is logged in via Auth0
-        if (req.oidc.isAuthenticated()) {
-            const { sub, nickname, name } = req.oidc.user;
-            // 2. Check if this specific user is in your Azure SQL database
-            const checkUser = await pool.request()
-                .input('auth0_id', sql.VarChar, sub)
-                .query('SELECT * FROM users WHERE auth0_id = @auth0_id');
-            if (checkUser.recordset.length === 0) {
-                // 3. New User: Insert them into the database and get the row back
-                const insertUser = await pool.request()
-                    .input('auth0_id', sql.VarChar, sub)
-                    .input('username', sql.VarChar, nickname || name)
-                    .query('INSERT INTO users (auth0_id, username, totalScore, showOnLeaderboard) OUTPUT INSERTED.* VALUES (@auth0_id, @username, 0, 1)');
-                currentUser = insertUser.recordset[0];
-            } else {
-                // 4. Returning User: Grab their existing database record
-                currentUser = checkUser.recordset[0];
-            }1433
-        }
-        // 5. Fetch leaderboard (Top 5) and cities map data
+        if (!pool) throw new Error("Database connection not established");
+
         const result = await pool.request().query('SELECT TOP 5 * FROM users ORDER BY totalScore DESC');
         const result2 = await pool.request().query('SELECT * FROM cities');
         
-        // 6. Render the page, passing the user object to EJS
         res.render('home', { 
             users: result.recordset, 
-            cities: result2.recordset,
-            currentUser: currentUser // Pass this so EJS knows who is logged in
+            cities: result2.recordset
+            // currentUser is already in res.locals from middleware, no need to pass it
         });
     } catch (err) {
         console.error('Home page error:', err);
-        res.status(500).render('home', { users: [], cities: [], currentUser: null, error: "Currently unable to load leaderboard." });
+        res.status(500).render('home', { users: [], cities: [], error: "Currently unable to load leaderboard." });
     }
 });
 
 
 
-const serverPort = process.env.PORT || 1433;
+const serverPort = process.env.PORT || 3000;
 
 async function startServer() {
     await initDB(); // ensure DB is ready first

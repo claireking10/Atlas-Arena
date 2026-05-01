@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><%= page_title || "Atlas Arena" %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand">
+            <a href="/" class="brand-logo">Atlas Arena</a>
+        </div>
+        <div class="auth-buttons">
+            <% if (locals.currentUser) { %>
+                <span class="welcome-message">
+                    Welcome, <%= locals.currentUser.username %>
+                </span>
+                <a href="/profile" class="auth-button profile">Profile</a>
+                <a href="/logout" class="auth-button logout">Sign Out</a>
+            <% } else { %>
+                <a href="/login" class="auth-button login">Sign In / Join Arena</a>
+            <% } %>
+        </div>
+    </header>

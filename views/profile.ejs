@@ -1,0 +1,73 @@
+<%- include('../partials/header', { page_title: "Profile" }) %>
+<link rel="stylesheet" href="/css/profile.css">
+<main>
+    <div class="profilePage">
+        <div class="profileSidebar">
+            <div class="profileCard">
+                <!-- makes an "icon" based on the first letter of the username -->
+                <div class="profileInitials">
+                    <%= user.username ? user.username.charAt(0).toUpperCase() : '?' %>
+                </div>
+                <!-- display username -->
+                <h2><%= user.username %></h2>
+                <!-- time since user has created account -->
+                <% if (user.createdAt) { %>
+                    <p class="memberSince">
+                        Member since <%= new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) %>
+                    </p>
+                <% } %>
+                <button class="editBtn" onclick="openEditModal()">Edit Profile</button>
+            </div>
+        </div>
+
+        <div class="profileMain">
+            <!-- displays divs with personal stats; all that's in the db are games played & top scores -->
+            <!-- can be populated w other stats if added to the db -->
+            <h1>Your Stats</h1>
+            <div class="statsGrid">
+                <div class="statCard">
+                    <p class="statNumber"><%= user.gamesPlayed || 0 %></p>
+                    <p class="statLabel">Games Played</p>
+                </div>
+                <div class="statCard">
+                    <p class="statNumber"><%= user.totalScore || 0 %></p>
+                    <p class="statLabel">Total Score</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- edit profile modal -->
+        <div id="editModal" class="modalOverlay" style="display:none;">
+            <div class="modalCard">
+                <div class="modalHeader">
+                    <h2>Edit Profile</h2>
+                    <button class="modalClose" onclick="closeEditModal()">✕</button>
+                </div>
+                <form action="/profile/edit" method="POST" class="editForm">
+                    <div class="formGroup"> <!-- allows label and input to be together instead of stacked -->
+                        <label>Username</label>
+                        <input type="text" name="username" value="<%= user.username %>" placeholder="Your username" required>
+                    </div>
+                    <div class="modalActions">
+                        <button type="button" class="cancelBtn" onclick="closeEditModal()">Cancel</button>
+                        <button type="submit" class="saveBtn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+function openEditModal() {
+    document.getElementById('editModal').style.display = 'flex';
+}
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEditModal();
+});
+</script>
+
+<%- include('../partials/footer') %>

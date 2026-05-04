@@ -24,6 +24,10 @@
 
     <section class="leaderboard">
         <h2>Top Players</h2>
+        <form id="searchForm">
+            <input type="text" id="searchInput" placeholder="Search users by name...">
+            <button type="submit">Search</button>
+        </form>
         <table>
             <thead>
                 <tr>
@@ -31,7 +35,7 @@
                     <th>Score</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="leaderboardContent">
                 <% if (users && users.length > 0) { %>
                     <% users.forEach(user => { %>
                         <tr>
@@ -51,7 +55,35 @@
     <script>
         // get a reference to the iframe to interact with the map
         const iframe = document.getElementById("fram");
+        const originalLeaderboard = document.getElementById("leaderboardContent").innerHTML;
         
+        async function searchFunction(name) {
+            const response = await fetch(`/api/leaderboard/search?name=${encodeURIComponent(nane)}`);
+            const data = await response.json();
+            const resultsDiv = document.getElementById("leaderboardContent");
+            if (data.length === 0) {
+                resultsDiv.innerHTML = `<tr><td colspan="2">No players found yet.</td></tr>`;
+                return;
+            }
+            resultsDiv.innerHTML = data.map(player =>
+                <tr>
+                    <td>${player.username || 'Anonymous'}</td>
+                    <td>${player.totalScore || 0}</td>
+                </tr>
+            ).join("");
+        }
+
+        document.getElementById("searchForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const name = document.getElementById("searchInput").value.trim();
+            if (name) searchFunction(name);
+        });
+
+        document.getElementById("searchInput").addEventListener("input", (e) => {
+            if (e.target.value.trim() === "") {
+                document.getElementById("leaderboardContent").innerHTML = originalLeaderboard;
+            }
+        });
     </script>
 <%- include('../partials/footer') %>
 

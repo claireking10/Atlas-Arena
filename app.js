@@ -183,6 +183,19 @@ app.get('/', async (req, res) => {
     }
 });
 
+//Search users in Leaderboard function
+app.get("/api/leaderboard/search", async (req, res) => {
+    const { name } = req.query;
+    try {
+        if (!pool) throw new Error("Database connection not established");
+        const result = await pool.request()
+                        .input('name', `%${name}%`)
+                        .query('SELECT * FROM users WHERE username LIKE @name ORDER BY totalScore DESC');
+        res.json(result.recordset);
+    } catch (err) {
+        res.status(500).json({ error: "Search failed" });
+    }
+});
 
 
 const serverPort = process.env.PORT || 3000;

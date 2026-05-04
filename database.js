@@ -179,6 +179,12 @@ async function getOrCreateUser(pool, auth0_id, username) {
     return result.recordset[0];
 }
 
+async function getLeaderboard() {
+    if (!pool) throw new Error("Database connection not established");
+    const result = await pool.request().query('SELECT TOP 5 * FROM users ORDER BY totalScore DESC');
+    return result.recordset
+}
+
 // export functions to app.js
 exports.dbCities = getCities;
 exports.dbQuiz = getQuiz;
@@ -186,3 +192,4 @@ exports.dbCityById = getCityById;
 exports.dbSubmitQuiz = submitQuiz;
 exports.dbUserProfile = getUserProfile;
 exports.dbGetOrCreateUser = getOrCreateUser;
+exports.dbGetLeaderboard = getLeaderboard;

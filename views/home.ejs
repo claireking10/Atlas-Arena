@@ -58,19 +58,19 @@
         const originalLeaderboard = document.getElementById("leaderboardContent").innerHTML;
         
         async function searchFunction(name) {
-            const response = await fetch(`/api/leaderboard/search?name=${encodeURIComponent(nane)}`);
+            const response = await fetch(`/api/leaderboard/search?name=${encodeURIComponent(name)}`);
             const data = await response.json();
             const resultsDiv = document.getElementById("leaderboardContent");
             if (data.length === 0) {
-                resultsDiv.innerHTML = `<tr><td colspan="2">No players found yet.</td></tr>`;
+                resultsDiv.innerHTML = `<tr><td colspan="2">No user found by that name</td></tr>`;
                 return;
             }
-            resultsDiv.innerHTML = data.map(player =>
+            resultsDiv.innerHTML = data.map(player => `
                 <tr>
                     <td>${player.username || 'Anonymous'}</td>
                     <td>${player.totalScore || 0}</td>
                 </tr>
-            ).join("");
+            `).join("");
         }
 
         document.getElementById("searchForm").addEventListener("submit", (e) => {

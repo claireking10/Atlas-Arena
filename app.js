@@ -13,6 +13,7 @@ var dbQuiz = require('./database.js').dbQuiz;
 var dbCityById = require('./database.js').dbCityById;
 var dbSubmitQuiz = require('./database.js').dbSubmitQuiz;
 var initDB = require('./database.js').initDB;
+var getLeaderboard = require('./database.js').dbGetLeaderboard;
 
 // import pool to use requests (needed until all requests moved to database.js)
 var getPool = require('./database.js').getPool;
@@ -169,11 +170,11 @@ app.get('/', async (req, res) => {
     try {
         if (!pool) throw new Error("Database connection not established");
 
-        const result = await pool.request().query('SELECT TOP 5 * FROM users ORDER BY totalScore DESC');
+        const result = await getLeaderboard();
         const result2 = await pool.request().query('SELECT * FROM cities');
         
         res.render('home', { 
-            users: result.recordset, 
+            users: result, 
             cities: result2.recordset
             // currentUser is already in res.locals from middleware, no need to pass it
         });
@@ -182,10 +183,20 @@ app.get('/', async (req, res) => {
         res.status(500).render('home', { users: [], cities: [], error: "Currently unable to load leaderboard." });
     }
 });
+//alternate leaderboard data so it doesn't have to refresh
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const users = await getLeaderboard();
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch leaderboard" });
+  }
+});
 
 //Search users in Leaderboard function
 app.get("/api/leaderboard/search", async (req, res) => {
     const { name } = req.query;
+    const pool = getPool();
     try {
         if (!pool) throw new Error("Database connection not established");
         const result = await pool.request()

@@ -14,6 +14,10 @@ var dbCityById = require('./database.js').dbCityById;
 var dbSubmitQuiz = require('./database.js').dbSubmitQuiz;
 var initDB = require('./database.js').initDB;
 var getLeaderboard = require('./database.js').dbGetLeaderboard;
+var gamesPlayed = require('./database.js').dbGamesPlayed;
+var updateUserName = require('./database.js').dbUpdateUserName;
+var getCities = require('./database.js').dbGetCities;
+var searchLeaderboard = require('./database.js').dbSearchLeaderboard;
 
 // import pool to use requests (needed until all requests moved to database.js)
 var getPool = require('./database.js').getPool;
@@ -49,10 +53,9 @@ function getPreferredUsername(user) {
 app.use(async (req, res, next) => {
     try {
         if (req.oidc.isAuthenticated()) {
-            const pool = getPool();
             const sub = req.oidc.user.sub;
             const username = getPreferredUsername(req.oidc.user);
-            res.locals.currentUser = await getOrCreateUser(pool, sub, username);
+            res.locals.currentUser = await getOrCreateUser(sub, username);
         } else {
             res.locals.currentUser = null;
         }
@@ -66,36 +69,30 @@ app.use(async (req, res, next) => {
 // help to get preferred username
 app.get('/profile', requiresAuth(), async (req, res) => {
     const auth0_id = req.oidc.user.sub;
-    const pool = getPool();
 // returns user if they exist, otherwise creates them & returns
     const user = await getOrCreateUser(
-        pool,
         auth0_id,
         getPreferredUsername(req.oidc.user)
     );
 // get number of games played
-    const statsResult = await pool.request()
-        .input('auth0_id', sql.NVarChar, auth0_id)
-        .query('SELECT COUNT(*) AS gamesPlayed FROM quiz_scores WHERE auth0_id = @auth0_id');
-    const gamesPlayed = statsResult.recordset[0].gamesPlayed;
+    const gameStats = await gamesPlayed(auth0_id);
 
     res.render('profile', {
-        user: { ...user, gamesPlayed },
+        user: { ...user, gameStats },
         currentUser: user
     });
 });
 
 app.post('/profile/edit', requiresAuth(), async (req, res) => {
-    const auth0_id = req.oidc.user.sub;
-    const { username } = req.body;
-    const pool = getPool();
-
-    // edit profile route allows user to change their username
-    await pool.request()
-        .input('auth0_id', sql.NVarChar, auth0_id)
-        .input('username', sql.NVarChar, username)
-        .query('UPDATE users SET username = @username WHERE auth0_id = @auth0_id');
-    res.redirect('/profile');
+    try {
+        const auth0_id = req.oidc.user.sub;
+        const { username } = req.body;
+        await updateUserName(auth0_id, username);
+        res.redirect('/profile');
+    } catch (err) {
+        console.error('Profile edit error:', err);
+        res.status(500).json({ error: 'edit failed' });
+    }
 });
 
 // render the world map when requested inside the iframe
@@ -164,18 +161,14 @@ app.post('/quiz/submit', async (req, res) => {
 
 
 // Main route including leaderboard
-// TO DO: Move queries into database.js
+// TO DO: Move queries into database.js - Done!
 app.get('/', async (req, res) => {
-    const pool = getPool();
     try {
-        if (!pool) throw new Error("Database connection not established");
-
         const result = await getLeaderboard();
-        const result2 = await pool.request().query('SELECT * FROM cities');
-        
+        const result2 = await getCities();
         res.render('home', { 
             users: result, 
-            cities: result2.recordset
+            cities: result2
             // currentUser is already in res.locals from middleware, no need to pass it
         });
     } catch (err) {
@@ -196,13 +189,9 @@ app.get('/api/leaderboard', async (req, res) => {
 //Search users in Leaderboard function
 app.get("/api/leaderboard/search", async (req, res) => {
     const { name } = req.query;
-    const pool = getPool();
     try {
-        if (!pool) throw new Error("Database connection not established");
-        const result = await pool.request()
-                        .input('name', `%${name}%`)
-                        .query('SELECT * FROM users WHERE username LIKE @name ORDER BY totalScore DESC');
-        res.json(result.recordset);
+        const search = await searchLeaderboard(name);
+        res.json(search);
     } catch (err) {
         res.status(500).json({ error: "Search failed" });
     }

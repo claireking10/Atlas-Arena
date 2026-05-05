@@ -159,7 +159,7 @@ async function getUserProfile(auth0_id) {
 
 // get or create user
 // Create user if they don't exist, otherwise just return their data from DB
-async function getOrCreateUser(pool, auth0_id, username) {
+async function getOrCreateUser(auth0_id, username) {
     if (!pool) throw new Error("Database connection not established");
 
     // Only inserts if the user doesn't exist yet — never overwrites username
@@ -185,6 +185,30 @@ async function getLeaderboard() {
     return result.recordset
 }
 
+async function gamesPlayed(auth0_id) {
+    if (!pool) throw new Error("Database connection not established");
+    const result = await pool.request()
+            .input('auth0_id', sql.NVarChar, auth0_id)
+            .query('SELECT COUNT(*) AS gamesPlayed FROM quiz_scores WHERE auth0_id = @auth0_id');
+    return result.recordset[0].gamesPlayed;
+}
+
+async function updateUserName(auth0_id, username) {
+    if (!pool) throw new Error("Database connection not established");
+    await pool.request()
+        .input('auth0_id', sql.NVarChar, auth0_id)
+        .input('username', sql.NVarChar, username)
+        .query('UPDATE users SET username = @username WHERE auth0_id = @auth0_id');
+}
+
+async function searchLeaderboard(username) {
+    if (!pool) throw new Error("Database connection not established");
+    const result = await pool.request()
+        .input('username', sql.NVarChar, `%${username}%`)
+        .query('SELECT * FROM users WHERE username LIKE @username ORDER BY totalScore DESC');
+    return result.recordset;
+}
+
 // export functions to app.js
 exports.dbCities = getCities;
 exports.dbQuiz = getQuiz;
@@ -193,3 +217,7 @@ exports.dbSubmitQuiz = submitQuiz;
 exports.dbUserProfile = getUserProfile;
 exports.dbGetOrCreateUser = getOrCreateUser;
 exports.dbGetLeaderboard = getLeaderboard;
+exports.dbGamesPlayed = gamesPlayed;
+exports.dbUpdateUserName = updateUserName;
+exports.dbGetCities = getCities;
+exports.dbSearchLeaderboard = searchLeaderboard;

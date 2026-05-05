@@ -55,7 +55,7 @@
     <script>
         // get a reference to the iframe to interact with the map
         const iframe = document.getElementById("fram");
-        const originalLeaderboard = document.getElementById("leaderboardContent").innerHTML;
+        let originalLeaderboard = document.getElementById("leaderboardContent").innerHTML;
         
         async function searchFunction(name) {
             const response = await fetch(`/api/leaderboard/search?name=${encodeURIComponent(name)}`);
@@ -73,6 +73,27 @@
             `).join("");
         }
 
+        async function refreshLeaderboard() {
+            const response = await fetch('/api/leaderboard');
+            const data = await response.json();
+            const tbody = document.getElementById("leaderboardContent");
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2">No players found yet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(player =>`
+                <tr>
+                    <td>${player.username || 'Anonymous'}</td>
+                    <td>${player.totalScore || 0}</td>
+                </tr>
+            `).join("");
+
+            //keep originalLeaderboard in sync
+            originalLeaderboard = document.getElementById("leaderboardContent").innerHTML;
+        }
+
         document.getElementById("searchForm").addEventListener("submit", (e) => {
             e.preventDefault();
             const name = document.getElementById("searchInput").value.trim();
@@ -82,6 +103,12 @@
         document.getElementById("searchInput").addEventListener("input", (e) => {
             if (e.target.value.trim() === "") {
                 document.getElementById("leaderboardContent").innerHTML = originalLeaderboard;
+            }
+        });
+
+        window.addEventListener("message", (event) => {
+            if (event.data === "quizSubmitted") {
+                refreshLeaderboard();
             }
         });
     </script>

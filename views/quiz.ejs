@@ -151,6 +151,7 @@
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
                 renderSummary(data);
+                window.parent.postMessage("quizSubmitted", "*");
             } catch (err) {
                 document.getElementById("summary-content").innerHTML =
                     '<h2>Quiz Complete</h2>' +

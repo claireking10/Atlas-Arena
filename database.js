@@ -18,7 +18,7 @@ const config = {
     options: {
         encrypt: true
     }
-};  
+};
 
 // end required variables
 
@@ -188,8 +188,8 @@ async function getLeaderboard() {
 async function gamesPlayed(auth0_id) {
     if (!pool) throw new Error("Database connection not established");
     const result = await pool.request()
-            .input('auth0_id', sql.NVarChar, auth0_id)
-            .query('SELECT COUNT(*) AS gamesPlayed FROM quiz_scores WHERE auth0_id = @auth0_id');
+        .input('auth0_id', sql.NVarChar, auth0_id)
+        .query('SELECT COUNT(*) AS gamesPlayed FROM quiz_scores WHERE auth0_id = @auth0_id');
     return result.recordset[0].gamesPlayed;
 }
 
@@ -209,6 +209,14 @@ async function searchLeaderboard(username) {
     return result.recordset;
 }
 
+async function getOtherCities(cityId) {
+    if (!pool) throw new Error("Database connection not established");
+    const results = await pool.request()
+        .input('cityId', sql.Int, cityId)
+        .query(`SELECT * FROM cities WHERE id != @cityId`);
+    return results.recordset;
+}
+
 // export functions to app.js
 exports.dbCities = getCities;
 exports.dbQuiz = getQuiz;
@@ -221,3 +229,4 @@ exports.dbGamesPlayed = gamesPlayed;
 exports.dbUpdateUserName = updateUserName;
 exports.dbGetCities = getCities;
 exports.dbSearchLeaderboard = searchLeaderboard;
+exports.dbGetOtherCities = getOtherCities;

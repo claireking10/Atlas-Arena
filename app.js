@@ -18,6 +18,7 @@ var gamesPlayed = require('./database.js').dbGamesPlayed;
 var updateUserName = require('./database.js').dbUpdateUserName;
 var getCities = require('./database.js').dbGetCities;
 var searchLeaderboard = require('./database.js').dbSearchLeaderboard;
+var getOtherCities = require('./database.js').dbGetOtherCities;
 
 // import pool to use requests (needed until all requests moved to database.js)
 var getPool = require('./database.js').getPool;
@@ -43,8 +44,8 @@ app.use(auth(authConfig));
 
 // get the current user's username. if not, get the nickname (part before the @ in their email)
 function getPreferredUsername(user) {
-    return ( 
-        user?.username ||                
+    return (
+        user?.username ||
         user?.nickname
     );
 }
@@ -69,12 +70,12 @@ app.use(async (req, res, next) => {
 // help to get preferred username
 app.get('/profile', requiresAuth(), async (req, res) => {
     const auth0_id = req.oidc.user.sub;
-// returns user if they exist, otherwise creates them & returns
+    // returns user if they exist, otherwise creates them & returns
     const user = await getOrCreateUser(
         auth0_id,
         getPreferredUsername(req.oidc.user)
     );
-// get number of games played
+    // get number of games played
     const gameStats = await gamesPlayed(auth0_id);
 
     res.render('profile', {
@@ -102,11 +103,37 @@ app.get('/interactive-map', async (req, res) => {
 });
 
 // Switch from map to quiz for input city when start button is pushed.
-app.get('/quiz', async (req, res) => { 
+app.get('/quiz', async (req, res) => {
     const city = JSON.parse(req.query.city);
     const result = await dbQuiz(city);
     //console.log(result);
     res.render('quiz', result);
+});
+//Moves BuildChoices here
+app.get("/api/quiz/choices/:cityId/:field", async (req, res) => {
+    const { cityId, field } = req.params;
+    const cityInfo = await dbCityById(cityId);
+    const citiesTable = await getOtherCities(cityId);
+    const correct = cityInfo[field];
+    const seen = new Set([correct]);
+    const wrongs = [];
+    for (const c of citiesTable) {
+        const v = c[field];
+        if (v != null && !seen.has(v)) {
+            seen.add(v);
+            wrongs.push(v);
+        }
+    }
+    const shuffledWrongs = wrongs.sort(() => Math.random() - 0.5).slice(0, 3);
+    const choices = [correct, ...shuffledWrongs].sort(() => Math.random() - 0.5);
+    res.json(choices);
+});
+//Check Answer
+app.get("/api/quiz/answer/:cityId/:field", async (req, res) => {
+    const { cityId, field } = req.params;
+    const cityInfo = await dbCityById(cityId);
+    const correctValue = cityInfo[field];
+    res.json(correctValue);
 });
 
 app.post('/quiz/submit', async (req, res) => {
@@ -136,7 +163,7 @@ app.post('/quiz/submit', async (req, res) => {
 
         let recorded = false;
         let previousBest = 0;
-        
+
         // update score if user is logged in
         if (req.oidc.isAuthenticated()) {
             const auth0_id = req.oidc.user.sub;
@@ -166,8 +193,8 @@ app.get('/', async (req, res) => {
     try {
         const result = await getLeaderboard();
         const result2 = await getCities();
-        res.render('home', { 
-            users: result, 
+        res.render('home', {
+            users: result,
             cities: result2
             // currentUser is already in res.locals from middleware, no need to pass it
         });
@@ -178,12 +205,12 @@ app.get('/', async (req, res) => {
 });
 //alternate leaderboard data so it doesn't have to refresh
 app.get('/api/leaderboard', async (req, res) => {
-  try {
-    const users = await getLeaderboard();
-    res.json(users);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch leaderboard" });
-  }
+    try {
+        const users = await getLeaderboard();
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch leaderboard" });
+    }
 });
 
 //Search users in Leaderboard function

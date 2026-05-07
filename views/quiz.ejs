@@ -4,8 +4,10 @@
 <body>
     <script>
         // turn ejs variables into js constants
-        const cityInfo = <%- JSON.stringify(typeof city !== 'undefined' ? city : {}) %>;
-        const citiesTable = <%- JSON.stringify(typeof cities !== 'undefined' ? cities : []) %>;
+        // const cityInfo = <%- JSON.stringify(typeof city !== 'undefined' ? city : {}) %>;
+        // const citiesTable = <%- JSON.stringify(typeof cities !== 'undefined' ? cities : []) %>;
+        const cityId = <%- JSON.stringify(typeof city !== 'undefined' ? city.id : null) %>;
+        const cityName = <%- JSON.stringify(typeof city !== 'undefined' ? city.name : null) %>;
         const questionsTable = <%- JSON.stringify(typeof questions !== 'undefined' ? questions : []) %>;
     </script>
 
@@ -40,24 +42,25 @@
         let submitting = false;
         const recordedAnswers = [];
 
-        // return a list of shuffled answer choices based on the list of cities (remove duplicate answers)
-        function buildChoices(question) {
-            const correct = cityInfo[question.field];
-            const seen = new Set([correct]);
-            const wrongs = [];
-            for (const c of citiesTable) {
-                const v = c[question.field];
-                if (v != null && !seen.has(v)) {
-                    seen.add(v);
-                    wrongs.push(v);
-                }
-            }
-            const shuffledWrongs = wrongs.sort(() => Math.random() - 0.5).slice(0, 3);
-            return [correct, ...shuffledWrongs].sort(() => Math.random() - 0.5);
-        }
+        //Moved to server side
+        // // return a list of shuffled answer choices based on the list of cities (remove duplicate answers)
+        // function buildChoices(question) {
+        //     const correct = cityInfo[question.field];
+        //     const seen = new Set([correct]);
+        //     const wrongs = [];
+        //     for (const c of citiesTable) {
+        //         const v = c[question.field];
+        //         if (v != null && !seen.has(v)) {
+        //             seen.add(v);
+        //             wrongs.push(v);
+        //         }
+        //     }
+        //     const shuffledWrongs = wrongs.sort(() => Math.random() - 0.5).slice(0, 3);
+        //     return [correct, ...shuffledWrongs].sort(() => Math.random() - 0.5);
+        // }
 
         // initialize the question with q/total, answer choices, and submit buttons
-        function loadQuestion() {
+        async function loadQuestion() {
             const q = questionsTable[currentIndex];
             document.getElementById("progress").innerText =
                 "Question " + (currentIndex + 1) + " of " + questionsTable.length;
@@ -66,7 +69,9 @@
             const answersDiv = document.getElementById("answers");
             answersDiv.innerHTML = "";
 
-            const choices = buildChoices(q);
+            const response = await fetch(`/api/quiz/choices/${cityId}/${q.field}`);
+            const choices = await response.json();
+            // const choices = buildChoices(q);
             choices.forEach(choice => {
                 const btn = document.createElement("button");
                 btn.innerText = choice == null ? "" : choice;
@@ -85,12 +90,14 @@
         }
 
         // when answer selected, check for correctness and give feedback accordingly
-        function checkAnswer(selectedAnswer, btn) {
+        async function checkAnswer(selectedAnswer, btn) {
             if (locked) return;
             locked = true;
             const elapsedMs = Date.now() - questionStartTime;
             const q = questionsTable[currentIndex];
-            const correctValue = cityInfo[q.field];
+            // const correctValue = cityInfo[q.field];
+            const response = await fetch(`/api/quiz/answer/${cityId}/${q.field}`);
+            const correctValue = await response.json();
             const isCorrect = selectedAnswer === correctValue;
 
             // classify buttons as right or wrong to highlight colors
@@ -144,7 +151,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        cityId: cityInfo.id,
+                        cityId: cityId,
                         answers: recordedAnswers
                     })
                 });
@@ -170,10 +177,10 @@
 
             if (data.recorded) {
                 if (data.isNewHighScore) {
-                    parts.push('<p class="new-high">New high score for ' + escapeHtml(cityInfo.name) +
+                    parts.push('<p class="new-high">New high score for ' + escapeHtml(cityName) +
                         '! Previous best: ' + data.previousBest + '</p>');
                 } else {
-                    parts.push('<p>Your best for ' + escapeHtml(cityInfo.name) + ': ' + data.previousBest + '</p>');
+                    parts.push('<p>Your best for ' + escapeHtml(cityName) + ': ' + data.previousBest + '</p>');
                 }
             } else {
                 parts.push('<p style="font-style: italic; color: #666;">Log in to save your scores to the leaderboard.</p>');

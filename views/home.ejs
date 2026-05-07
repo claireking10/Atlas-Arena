@@ -24,6 +24,8 @@
 
     <section class="leaderboard">
         <h2>Top Players</h2>
+
+        <!-- Lily Added this section -->
         <div id="leaderboardNav">
             <div id="pageSwitch">
                 <button onclick=startPage()>&lt;&lt;</button>
@@ -46,6 +48,7 @@
             </thead>
             <tbody id="leaderboardContent">
                 <% if (users && users.length > 0) { %>
+                    <!-- Lily made the slice -->
                     <% users.slice(0, 5).forEach(user => { %>
                         <tr>
                             <td><%= user.username || 'Anonymous' %></td>
@@ -63,14 +66,15 @@
 
     <script>
         // get a reference to the iframe to interact with the map
-        let users = <%- JSON.stringify(users) %>;
         const iframe = document.getElementById("fram");
+
+        //Lily added these variables
+        let users = <%- JSON.stringify(users) %>;
         let page = 0;
         const pageSize = 5;
         let numberOfPages = Math.ceil((users.length)/pageSize);
         
-
-        function renderTable() {
+        function renderTable() { //By Lily
             const start = page * pageSize
             const div = document.getElementById("leaderboardContent");
 
@@ -84,7 +88,7 @@
                 : `<tr><td colspan="2">No players found yet.</td></tr>`;
         }
         
-        async function searchFunction(name) {
+        async function searchFunction(name) { //By Lily
             const response = await fetch(`/api/leaderboard/search?name=${encodeURIComponent(name)}`);
             const data = await response.json();
             const resultsDiv = document.getElementById("leaderboardContent");
@@ -100,7 +104,7 @@
             `).join("");
         }
 
-        async function refreshLeaderboard() {
+        async function refreshLeaderboard() { //By Lily
             const response = await fetch('/api/leaderboard');
             const data = await response.json();
             
@@ -110,25 +114,25 @@
             renderTable();
         }
 
-        document.getElementById("searchForm").addEventListener("submit", (e) => {
+        document.getElementById("searchForm").addEventListener("submit", (e) => { //By Lily
             e.preventDefault();
             const name = document.getElementById("searchInput").value.trim();
             if (name) searchFunction(name);
         });
 
-        document.getElementById("searchInput").addEventListener("input", (e) => {
+        document.getElementById("searchInput").addEventListener("input", (e) => { //By Lily
             if (e.target.value.trim() === "") {
                 refreshLeaderboard();
             }
         });
 
-        window.addEventListener("message", (event) => {
+        window.addEventListener("message", (event) => { //By Lily
             if (event.data === "quizSubmitted") {
                 refreshLeaderboard();
             }
         });
 
-        //Page Managers
+        //Page Managers - By Lily
         function startPage() {page = 0; renderTable();}
         function prevPage() {if (page > 0) {page--; renderTable();}}
         function nextPage() { if (page < numberOfPages - 1) {page++; renderTable();}}

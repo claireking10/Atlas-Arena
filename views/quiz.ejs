@@ -42,7 +42,7 @@
         let submitting = false;
         const recordedAnswers = [];
 
-        //Moved to server side
+        //Moved to server side by Lily
         // // return a list of shuffled answer choices based on the list of cities (remove duplicate answers)
         // function buildChoices(question) {
         //     const correct = cityInfo[question.field];
@@ -69,6 +69,7 @@
             const answersDiv = document.getElementById("answers");
             answersDiv.innerHTML = "";
 
+            //Adjusted to serverside by Lily
             const response = await fetch(`/api/quiz/choices/${cityId}/${q.field}`);
             const choices = await response.json();
             // const choices = buildChoices(q);
@@ -95,6 +96,8 @@
             locked = true;
             const elapsedMs = Date.now() - questionStartTime;
             const q = questionsTable[currentIndex];
+
+            //Adjusted to server side by Lily
             // const correctValue = cityInfo[q.field];
             const response = await fetch(`/api/quiz/answer/${cityId}/${q.field}`);
             const correctValue = await response.json();
@@ -158,7 +161,7 @@
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
                 renderSummary(data);
-                window.parent.postMessage("quizSubmitted", "*");
+                window.parent.postMessage("quizSubmitted", "*"); //Added by Lily to refresh Leaderboard
             } catch (err) {
                 document.getElementById("summary-content").innerHTML =
                     '<h2>Quiz Complete</h2>' +

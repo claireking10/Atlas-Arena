@@ -13,12 +13,12 @@ var dbQuiz = require('./database.js').dbQuiz;
 var dbCityById = require('./database.js').dbCityById;
 var dbSubmitQuiz = require('./database.js').dbSubmitQuiz;
 var initDB = require('./database.js').initDB;
-var getLeaderboard = require('./database.js').dbGetLeaderboard;
-var gamesPlayed = require('./database.js').dbGamesPlayed;
-var updateUserName = require('./database.js').dbUpdateUserName;
-var getCities = require('./database.js').dbGetCities;
-var searchLeaderboard = require('./database.js').dbSearchLeaderboard;
-var getOtherCities = require('./database.js').dbGetOtherCities;
+var getLeaderboard = require('./database.js').dbGetLeaderboard; //By Lily
+var gamesPlayed = require('./database.js').dbGamesPlayed; //By Lily
+var updateUserName = require('./database.js').dbUpdateUserName; //By Lily
+var getCities = require('./database.js').dbGetCities; //By Lily
+var searchLeaderboard = require('./database.js').dbSearchLeaderboard; //By Lily
+var getOtherCities = require('./database.js').dbGetOtherCities; //By Lily
 
 // import pool to use requests (needed until all requests moved to database.js)
 var getPool = require('./database.js').getPool;
@@ -112,7 +112,7 @@ app.get('/quiz', async (req, res) => {
     //console.log(result);
     res.render('quiz', result);
 });
-//Moves BuildChoices here
+//Lily Added - Moves BuildChoices here to keep things server side
 app.get("/api/quiz/choices/:cityId/:field", async (req, res) => {
     const { cityId, field } = req.params;
     const cityInfo = await dbCityById(cityId);
@@ -131,7 +131,7 @@ app.get("/api/quiz/choices/:cityId/:field", async (req, res) => {
     const choices = [correct, ...shuffledWrongs].sort(() => Math.random() - 0.5);
     res.json(choices);
 });
-//Check Answer
+//Lily added - Check Answer here to prevent cheating
 app.get("/api/quiz/answer/:cityId/:field", async (req, res) => {
     const { cityId, field } = req.params;
     const cityInfo = await dbCityById(cityId);
@@ -191,7 +191,7 @@ app.post('/quiz/submit', async (req, res) => {
 
 
 // Main route including leaderboard
-// TO DO: Move queries into database.js - Done!
+// TO DO: Move queries into database.js - Done!By Lily
 app.get('/', async (req, res) => {
     try {
         const result = await getLeaderboard();
@@ -216,7 +216,7 @@ app.get('/api/leaderboard', async (req, res) => {
     }
 });
 
-//Search users in Leaderboard function
+//Search users in Leaderboard function - By Lily
 app.get("/api/leaderboard/search", async (req, res) => {
     const { name } = req.query;
     try {

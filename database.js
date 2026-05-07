@@ -179,13 +179,13 @@ async function getOrCreateUser(auth0_id, username) {
     return result.recordset[0];
 }
 
-async function getLeaderboard() {
+async function getLeaderboard() { //By Lily
     if (!pool) throw new Error("Database connection not established");
     const result = await pool.request().query('SELECT * FROM users ORDER BY totalScore DESC');
     return result.recordset
 }
 
-async function gamesPlayed(auth0_id) {
+async function gamesPlayed(auth0_id) { //By Lily
     if (!pool) throw new Error("Database connection not established");
     const result = await pool.request()
         .input('auth0_id', sql.NVarChar, auth0_id)
@@ -193,7 +193,7 @@ async function gamesPlayed(auth0_id) {
     return result.recordset[0].gamesPlayed;
 }
 
-async function updateUserName(auth0_id, username) {
+async function updateUserName(auth0_id, username) { //By Lily
     if (!pool) throw new Error("Database connection not established");
     await pool.request()
         .input('auth0_id', sql.NVarChar, auth0_id)
@@ -201,7 +201,7 @@ async function updateUserName(auth0_id, username) {
         .query('UPDATE users SET username = @username WHERE auth0_id = @auth0_id');
 }
 
-async function searchLeaderboard(username) {
+async function searchLeaderboard(username) { //By Lily
     if (!pool) throw new Error("Database connection not established");
     const result = await pool.request()
         .input('username', sql.NVarChar, `%${username}%`)
@@ -209,7 +209,7 @@ async function searchLeaderboard(username) {
     return result.recordset;
 }
 
-async function getOtherCities(cityId) {
+async function getOtherCities(cityId) { //By Lily
     if (!pool) throw new Error("Database connection not established");
     const results = await pool.request()
         .input('cityId', sql.Int, cityId)
@@ -222,11 +222,11 @@ exports.dbCities = getCities;
 exports.dbQuiz = getQuiz;
 exports.dbCityById = getCityById;
 exports.dbSubmitQuiz = submitQuiz;
-exports.dbUserProfile = getUserProfile;
-exports.dbGetOrCreateUser = getOrCreateUser;
-exports.dbGetLeaderboard = getLeaderboard;
-exports.dbGamesPlayed = gamesPlayed;
-exports.dbUpdateUserName = updateUserName;
-exports.dbGetCities = getCities;
-exports.dbSearchLeaderboard = searchLeaderboard;
-exports.dbGetOtherCities = getOtherCities;
+exports.dbUserProfile = getUserProfile; //By Claire
+exports.dbGetOrCreateUser = getOrCreateUser; //By Claire
+exports.dbGetLeaderboard = getLeaderboard; //By Lily
+exports.dbGamesPlayed = gamesPlayed; //By Lily
+exports.dbUpdateUserName = updateUserName; //By Lily
+exports.dbGetCities = getCities; //By Lily
+exports.dbSearchLeaderboard = searchLeaderboard; //By Lily
+exports.dbGetOtherCities = getOtherCities; //By Lily

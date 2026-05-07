@@ -181,7 +181,7 @@ async function getOrCreateUser(auth0_id, username) {
 
 async function getLeaderboard() {
     if (!pool) throw new Error("Database connection not established");
-    const result = await pool.request().query('SELECT TOP 5 * FROM users ORDER BY totalScore DESC');
+    const result = await pool.request().query('SELECT * FROM users ORDER BY totalScore DESC');
     return result.recordset
 }
 

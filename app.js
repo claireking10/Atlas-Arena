@@ -13,6 +13,12 @@ var dbQuiz = require('./database.js').dbQuiz;
 var dbCityById = require('./database.js').dbCityById;
 var dbSubmitQuiz = require('./database.js').dbSubmitQuiz;
 var initDB = require('./database.js').initDB;
+var getLeaderboard = require('./database.js').dbGetLeaderboard;
+var gamesPlayed = require('./database.js').dbGamesPlayed;
+var updateUserName = require('./database.js').dbUpdateUserName;
+var getCities = require('./database.js').dbGetCities;
+var searchLeaderboard = require('./database.js').dbSearchLeaderboard;
+var getOtherCities = require('./database.js').dbGetOtherCities;
 
 // import pool to use requests (needed until all requests moved to database.js)
 var getPool = require('./database.js').getPool;
@@ -38,8 +44,8 @@ app.use(auth(authConfig));
 
 // claire added: get the current user's username. if not, get the nickname (part before the @ in their email)
 function getPreferredUsername(user) {
-    return ( 
-        user?.username ||                
+    return (
+        user?.username ||
         user?.nickname
     );
 }
@@ -49,10 +55,9 @@ function getPreferredUsername(user) {
 app.use(async (req, res, next) => {
     try {
         if (req.oidc.isAuthenticated()) {
-            const pool = getPool();
             const sub = req.oidc.user.sub;
             const username = getPreferredUsername(req.oidc.user);
-            res.locals.currentUser = await getOrCreateUser(pool, sub, username);
+            res.locals.currentUser = await getOrCreateUser(sub, username);
         } else {
             res.locals.currentUser = null;
         }
@@ -67,36 +72,31 @@ app.use(async (req, res, next) => {
 // help to get preferred username
 app.get('/profile', requiresAuth(), async (req, res) => {
     const auth0_id = req.oidc.user.sub;
-    const pool = getPool();
-// returns user if they exist, otherwise creates them & returns
+    // returns user if they exist, otherwise creates them & returns
     const user = await getOrCreateUser(
-        pool,
         auth0_id,
         getPreferredUsername(req.oidc.user)
     );
-// get number of games played
-    const statsResult = await pool.request()
-        .input('auth0_id', sql.NVarChar, auth0_id)
-        .query('SELECT COUNT(*) AS gamesPlayed FROM quiz_scores WHERE auth0_id = @auth0_id');
-    const gamesPlayed = statsResult.recordset[0].gamesPlayed;
+    // get number of games played
+    const gameStats = await gamesPlayed(auth0_id);
 
     res.render('profile', {
-        user: { ...user, gamesPlayed },
+        user: { ...user, gameStats },
         currentUser: user
     });
 });
 
 // claire added: handles profile form submission and updates user's username in the db when edited
 app.post('/profile/edit', requiresAuth(), async (req, res) => {
-    const auth0_id = req.oidc.user.sub;
-    const { username } = req.body;
-    const pool = getPool();
-
-    await pool.request()
-        .input('auth0_id', sql.NVarChar, auth0_id)
-        .input('username', sql.NVarChar, username)
-        .query('UPDATE users SET username = @username WHERE auth0_id = @auth0_id');
-    res.redirect('/profile');
+    try {
+        const auth0_id = req.oidc.user.sub;
+        const { username } = req.body;
+        await updateUserName(auth0_id, username);
+        res.redirect('/profile');
+    } catch (err) {
+        console.error('Profile edit error:', err);
+        res.status(500).json({ error: 'edit failed' });
+    }
 });
 
 // render the world map when requested inside the iframe
@@ -106,11 +106,37 @@ app.get('/interactive-map', async (req, res) => {
 });
 
 // Switch from map to quiz for input city when start button is pushed.
-app.get('/quiz', async (req, res) => { 
+app.get('/quiz', async (req, res) => {
     const city = JSON.parse(req.query.city);
     const result = await dbQuiz(city);
     //console.log(result);
     res.render('quiz', result);
+});
+//Moves BuildChoices here
+app.get("/api/quiz/choices/:cityId/:field", async (req, res) => {
+    const { cityId, field } = req.params;
+    const cityInfo = await dbCityById(cityId);
+    const citiesTable = await getOtherCities(cityId);
+    const correct = cityInfo[field];
+    const seen = new Set([correct]);
+    const wrongs = [];
+    for (const c of citiesTable) {
+        const v = c[field];
+        if (v != null && !seen.has(v)) {
+            seen.add(v);
+            wrongs.push(v);
+        }
+    }
+    const shuffledWrongs = wrongs.sort(() => Math.random() - 0.5).slice(0, 3);
+    const choices = [correct, ...shuffledWrongs].sort(() => Math.random() - 0.5);
+    res.json(choices);
+});
+//Check Answer
+app.get("/api/quiz/answer/:cityId/:field", async (req, res) => {
+    const { cityId, field } = req.params;
+    const cityInfo = await dbCityById(cityId);
+    const correctValue = cityInfo[field];
+    res.json(correctValue);
 });
 
 app.post('/quiz/submit', async (req, res) => {
@@ -140,7 +166,7 @@ app.post('/quiz/submit', async (req, res) => {
 
         let recorded = false;
         let previousBest = 0;
-        
+
         // update score if user is logged in
         if (req.oidc.isAuthenticated()) {
             const auth0_id = req.oidc.user.sub;
@@ -165,29 +191,41 @@ app.post('/quiz/submit', async (req, res) => {
 
 
 // Main route including leaderboard
-// TO DO: Move queries into database.js
+// TO DO: Move queries into database.js - Done!
 app.get('/', async (req, res) => {
-    const pool = getPool();
     try {
-        if (!pool) throw new Error("Database connection not established");
-        // removed checking if user is logged in, is in azure sql db, etc and moved to app.use(async (req, res, next)
-        
-        // Fetch leaderboard (Top 5) and cities map data
-        const result = await pool.request().query('SELECT TOP 5 * FROM users ORDER BY totalScore DESC');
-        const result2 = await pool.request().query('SELECT * FROM cities');
-        
-        // Render the page, passing the user object to EJS
-        res.render('home', { 
-            users: result.recordset, 
-            cities: result2.recordset
-            // currentUser is now passed into all views in res.locals by auth middleware so i removed it here
+        const result = await getLeaderboard();
+        const result2 = await getCities();
+        res.render('home', {
+            users: result,
+            cities: result2
+            // currentUser is already in res.locals from middleware, no need to pass it
         });
     } catch (err) {
         console.error('Home page error:', err);
         res.status(500).render('home', { users: [], cities: [], error: "Currently unable to load leaderboard." });
     }
 });
+//alternate leaderboard data so it doesn't have to refresh
+app.get('/api/leaderboard', async (req, res) => {
+    try {
+        const users = await getLeaderboard();
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch leaderboard" });
+    }
+});
 
+//Search users in Leaderboard function
+app.get("/api/leaderboard/search", async (req, res) => {
+    const { name } = req.query;
+    try {
+        const search = await searchLeaderboard(name);
+        res.json(search);
+    } catch (err) {
+        res.status(500).json({ error: "Search failed" });
+    }
+});
 
 
 const serverPort = process.env.PORT || 3000;

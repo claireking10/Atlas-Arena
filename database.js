@@ -18,7 +18,7 @@ const config = {
     options: {
         encrypt: true
     }
-};  
+};
 
 // end required variables
 
@@ -157,9 +157,9 @@ async function getUserProfile(auth0_id) {
     }
 }
 
-// claire added: get or create user
-// create user if they don't exist, otherwise just return their data from DB via auth0 id
-async function getOrCreateUser(pool, auth0_id, username) {
+// get or create user
+// Create user if they don't exist, otherwise just return their data from DB
+async function getOrCreateUser(auth0_id, username) {
     if (!pool) throw new Error("Database connection not established");
 
     // only inserts if the user doesn't exist yet — never overwrites username
@@ -179,10 +179,54 @@ async function getOrCreateUser(pool, auth0_id, username) {
     return result.recordset[0];
 }
 
+async function getLeaderboard() {
+    if (!pool) throw new Error("Database connection not established");
+    const result = await pool.request().query('SELECT * FROM users ORDER BY totalScore DESC');
+    return result.recordset
+}
+
+async function gamesPlayed(auth0_id) {
+    if (!pool) throw new Error("Database connection not established");
+    const result = await pool.request()
+        .input('auth0_id', sql.NVarChar, auth0_id)
+        .query('SELECT COUNT(*) AS gamesPlayed FROM quiz_scores WHERE auth0_id = @auth0_id');
+    return result.recordset[0].gamesPlayed;
+}
+
+async function updateUserName(auth0_id, username) {
+    if (!pool) throw new Error("Database connection not established");
+    await pool.request()
+        .input('auth0_id', sql.NVarChar, auth0_id)
+        .input('username', sql.NVarChar, username)
+        .query('UPDATE users SET username = @username WHERE auth0_id = @auth0_id');
+}
+
+async function searchLeaderboard(username) {
+    if (!pool) throw new Error("Database connection not established");
+    const result = await pool.request()
+        .input('username', sql.NVarChar, `%${username}%`)
+        .query('SELECT * FROM users WHERE username LIKE @username ORDER BY totalScore DESC');
+    return result.recordset;
+}
+
+async function getOtherCities(cityId) {
+    if (!pool) throw new Error("Database connection not established");
+    const results = await pool.request()
+        .input('cityId', sql.Int, cityId)
+        .query(`SELECT * FROM cities WHERE id != @cityId`);
+    return results.recordset;
+}
+
 // export functions to app.js
 exports.dbCities = getCities;
 exports.dbQuiz = getQuiz;
 exports.dbCityById = getCityById;
 exports.dbSubmitQuiz = submitQuiz;
-exports.dbUserProfile = getUserProfile; //claire added this
-exports.dbGetOrCreateUser = getOrCreateUser; //claire added this
+exports.dbUserProfile = getUserProfile;
+exports.dbGetOrCreateUser = getOrCreateUser;
+exports.dbGetLeaderboard = getLeaderboard;
+exports.dbGamesPlayed = gamesPlayed;
+exports.dbUpdateUserName = updateUserName;
+exports.dbGetCities = getCities;
+exports.dbSearchLeaderboard = searchLeaderboard;
+exports.dbGetOtherCities = getOtherCities;

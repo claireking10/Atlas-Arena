@@ -24,6 +24,19 @@
 
     <section class="leaderboard">
         <h2>Top Players</h2>
+        <div id="leaderboardNav">
+            <div id="pageSwitch">
+                <button onclick=startPage()>&lt;&lt;</button>
+                <button onclick=prevPage()>&lt;</button>
+                <button onclick=nextPage()>&gt;</button>
+                <button onclick=endPage()>&gt;&gt;</button>
+            </div>
+            <form id="searchForm">
+                <input type="text" id="searchInput" placeholder="Search users by name...">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+        
         <table>
             <thead>
                 <tr>
@@ -31,9 +44,9 @@
                     <th>Score</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="leaderboardContent">
                 <% if (users && users.length > 0) { %>
-                    <% users.forEach(user => { %>
+                    <% users.slice(0, 5).forEach(user => { %>
                         <tr>
                             <td><%= user.username || 'Anonymous' %></td>
                             <td><%= user.totalScore || 0 %></td>
@@ -50,8 +63,76 @@
 
     <script>
         // get a reference to the iframe to interact with the map
+        let users = <%- JSON.stringify(users) %>;
         const iframe = document.getElementById("fram");
+        let page = 0;
+        const pageSize = 5;
+        let numberOfPages = Math.ceil((users.length)/pageSize);
         
+
+        function renderTable() {
+            const start = page * pageSize
+            const div = document.getElementById("leaderboardContent");
+
+            div.innerHTML = (users && users.length > 0)
+                ? users.slice(start, start+pageSize).map(user => ( `
+                        <tr>
+                            <td>${user.username || 'Anonymous'}</td>
+                            <td>${user.totalScore || 0}</td>
+                        </tr>
+                `)).join('')
+                : `<tr><td colspan="2">No players found yet.</td></tr>`;
+        }
+        
+        async function searchFunction(name) {
+            const response = await fetch(`/api/leaderboard/search?name=${encodeURIComponent(name)}`);
+            const data = await response.json();
+            const resultsDiv = document.getElementById("leaderboardContent");
+            if (data.length === 0) {
+                resultsDiv.innerHTML = `<tr><td colspan="2">No user found by that name</td></tr>`;
+                return;
+            }
+            resultsDiv.innerHTML = data.map(player => `
+                <tr>
+                    <td>${player.username || 'Anonymous'}</td>
+                    <td>${player.totalScore || 0}</td>
+                </tr>
+            `).join("");
+        }
+
+        async function refreshLeaderboard() {
+            const response = await fetch('/api/leaderboard');
+            const data = await response.json();
+            
+            users = data;
+            numberOfPages = Math.ceil((users.length)/pageSize);
+            page = 0;
+            renderTable();
+        }
+
+        document.getElementById("searchForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const name = document.getElementById("searchInput").value.trim();
+            if (name) searchFunction(name);
+        });
+
+        document.getElementById("searchInput").addEventListener("input", (e) => {
+            if (e.target.value.trim() === "") {
+                refreshLeaderboard();
+            }
+        });
+
+        window.addEventListener("message", (event) => {
+            if (event.data === "quizSubmitted") {
+                refreshLeaderboard();
+            }
+        });
+
+        //Page Managers
+        function startPage() {page = 0; renderTable();}
+        function prevPage() {if (page > 0) {page--; renderTable();}}
+        function nextPage() { if (page < numberOfPages - 1) {page++; renderTable();}}
+        function endPage() { page = numberOfPages - 1; renderTable();}
     </script>
 <%- include('../partials/footer') %>
 

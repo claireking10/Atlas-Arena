@@ -51,6 +51,7 @@ export function randomPin(){
 
         async function execute() {
             await sleep(7000); // Wait 7 seconds
+            // claire changed: location.href to window.top.location.href bc location.href navigates only iframe, window.top.location.href moves parent page so user actually goes to map page
             window.top.location.href = `/quiz?city=${encodeURIComponent(JSON.stringify(randomPin))}`; // change from map to quiz inside iframe
         }
     execute();
@@ -82,6 +83,7 @@ export function startQuiz(pin){
 
         async function execute() {
             await sleep(1400); // Wait 1.4 seconds
+            // claire changed: location.href to window.top.location.href bc location.href navigates only iframe, window.top.location.href moves parent page so user actually goes to map page
             window.top.location.href = `/quiz?city=${encodeURIComponent(JSON.stringify(pin))}`; // change from map to quiz inside iframe
         }
     execute();
@@ -89,8 +91,6 @@ export function startQuiz(pin){
     
     
 }
-
-
 
 let map;
 

@@ -133,7 +133,7 @@ async function submitQuiz({ auth0_id, cityName, score }) {
     }
 }
 
-// user profile functions
+// claire added: user profile functions; gets single user profile data w games played and total score
 async function getUserProfile(auth0_id) {
     try {
         if (!pool) throw new Error("Database connection not established");
@@ -157,12 +157,12 @@ async function getUserProfile(auth0_id) {
     }
 }
 
-// get or create user
-// Create user if they don't exist, otherwise just return their data from DB
+// claire added: get or create user
+// create user if they don't exist, otherwise just return their data from DB via auth0 id
 async function getOrCreateUser(pool, auth0_id, username) {
     if (!pool) throw new Error("Database connection not established");
 
-    // Only inserts if the user doesn't exist yet — never overwrites username
+    // only inserts if the user doesn't exist yet — never overwrites username
     await pool.request()
         .input('auth0_id', sql.NVarChar, auth0_id)
         .input('username', sql.NVarChar, username)
@@ -184,5 +184,5 @@ exports.dbCities = getCities;
 exports.dbQuiz = getQuiz;
 exports.dbCityById = getCityById;
 exports.dbSubmitQuiz = submitQuiz;
-exports.dbUserProfile = getUserProfile;
-exports.dbGetOrCreateUser = getOrCreateUser;
+exports.dbUserProfile = getUserProfile; //claire added this
+exports.dbGetOrCreateUser = getOrCreateUser; //claire added this

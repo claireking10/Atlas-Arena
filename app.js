@@ -6,7 +6,7 @@ const sql = require('mssql');
 const express = require('express');
 const { auth, requiresAuth } = require('express-openid-connect');
 const app = express();
-var getOrCreateUser = require('./database.js').dbGetOrCreateUser;
+var getOrCreateUser = require('./database.js').dbGetOrCreateUser; // claire moved this up to the top for organization
 
 var dbCities = require('./database.js').dbCities;
 var dbQuiz = require('./database.js').dbQuiz;
@@ -20,7 +20,7 @@ var getPool = require('./database.js').getPool;
 app.set('view engine', 'ejs');
 app.use(express.static('public'))
 app.use(express.json())
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true })); // claire added this to parse requests with url encoded form data like profile edit
 
 // Auth0 Configuration using dotenv
 const authConfig = {
@@ -36,7 +36,7 @@ const authConfig = {
 // Initialize Auth0 router (this automatically creates /login and /logout routes)
 app.use(auth(authConfig));
 
-// get the current user's username. if not, get the nickname (part before the @ in their email)
+// claire added: get the current user's username. if not, get the nickname (part before the @ in their email)
 function getPreferredUsername(user) {
     return ( 
         user?.username ||                
@@ -44,7 +44,8 @@ function getPreferredUsername(user) {
     );
 }
 
-// set currentuser for all views
+// claire added: if the user is logged in, get or create their db record and attach to res.locals
+// makes currentuser visible for all views without passing manually
 app.use(async (req, res, next) => {
     try {
         if (req.oidc.isAuthenticated()) {
@@ -62,6 +63,7 @@ app.use(async (req, res, next) => {
     next();
 });
 
+//claire added: route to render the profile page
 // help to get preferred username
 app.get('/profile', requiresAuth(), async (req, res) => {
     const auth0_id = req.oidc.user.sub;
@@ -84,12 +86,12 @@ app.get('/profile', requiresAuth(), async (req, res) => {
     });
 });
 
+// claire added: handles profile form submission and updates user's username in the db when edited
 app.post('/profile/edit', requiresAuth(), async (req, res) => {
     const auth0_id = req.oidc.user.sub;
     const { username } = req.body;
     const pool = getPool();
 
-    // edit profile route allows user to change their username
     await pool.request()
         .input('auth0_id', sql.NVarChar, auth0_id)
         .input('username', sql.NVarChar, username)
@@ -168,14 +170,17 @@ app.get('/', async (req, res) => {
     const pool = getPool();
     try {
         if (!pool) throw new Error("Database connection not established");
-
+        // removed checking if user is logged in, is in azure sql db, etc and moved to app.use(async (req, res, next)
+        
+        // Fetch leaderboard (Top 5) and cities map data
         const result = await pool.request().query('SELECT TOP 5 * FROM users ORDER BY totalScore DESC');
         const result2 = await pool.request().query('SELECT * FROM cities');
         
+        // Render the page, passing the user object to EJS
         res.render('home', { 
             users: result.recordset, 
             cities: result2.recordset
-            // currentUser is already in res.locals from middleware, no need to pass it
+            // currentUser is now passed into all views in res.locals by auth middleware so i removed it here
         });
     } catch (err) {
         console.error('Home page error:', err);

@@ -6,7 +6,7 @@ const sql = require('mssql');
 const express = require('express');
 const { auth, requiresAuth } = require('express-openid-connect');
 const app = express();
-var getOrCreateUser = require('./database.js').dbGetOrCreateUser;
+var getOrCreateUser = require('./database.js').dbGetOrCreateUser; // claire moved this up to the top for organization
 
 var dbCities = require('./database.js').dbCities;
 var dbQuiz = require('./database.js').dbQuiz;
@@ -26,7 +26,7 @@ var getPool = require('./database.js').getPool;
 app.set('view engine', 'ejs');
 app.use(express.static('public'))
 app.use(express.json())
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true })); // claire added this to parse requests with url encoded form data like profile edit
 
 // Auth0 Configuration using dotenv
 const authConfig = {
@@ -42,7 +42,7 @@ const authConfig = {
 // Initialize Auth0 router (this automatically creates /login and /logout routes)
 app.use(auth(authConfig));
 
-// get the current user's username. if not, get the nickname (part before the @ in their email)
+// claire added: get the current user's username. if not, get the nickname (part before the @ in their email)
 function getPreferredUsername(user) {
     return (
         user?.username ||
@@ -50,7 +50,8 @@ function getPreferredUsername(user) {
     );
 }
 
-// set currentuser for all views
+// claire added: if the user is logged in, get or create their db record and attach to res.locals
+// makes currentuser visible for all views without passing manually
 app.use(async (req, res, next) => {
     try {
         if (req.oidc.isAuthenticated()) {
@@ -67,6 +68,7 @@ app.use(async (req, res, next) => {
     next();
 });
 
+//claire added: route to render the profile page
 // help to get preferred username
 app.get('/profile', requiresAuth(), async (req, res) => {
     const auth0_id = req.oidc.user.sub;
@@ -84,6 +86,7 @@ app.get('/profile', requiresAuth(), async (req, res) => {
     });
 });
 
+// claire added: handles profile form submission and updates user's username in the db when edited
 app.post('/profile/edit', requiresAuth(), async (req, res) => {
     try {
         const auth0_id = req.oidc.user.sub;

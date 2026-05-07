@@ -1,6 +1,6 @@
 <%- include('../partials/header', { page_title: city ? "Quiz: " + city.name : "Quiz" }) %>
 <link rel="stylesheet" href="/css/quiz.css">
-
+<!-- claire changed: moved css styling for the quiz page into quiz.css -->
 <body>
     <script>
         // turn ejs variables into js constants
@@ -166,6 +166,7 @@
                     '<div class="summary-actions">' +
                     '<button class="back-to-map" onclick="window.top.location.href=\'/\'">Back to Map</button>' +
                     '</div>';
+                    <!-- claire changed location.href to window.top.location.href bc location.href navigates only iframe, window.top.location.href moves parent page so user actually goes to map page -->
             }
         }
 
@@ -199,6 +200,8 @@
 
             parts.push('<div class="summary-actions">');
             parts.push('<button class="play-again" onclick="location.reload()">Play Again</button>');
+            // claire changed location.href to window.top.location.href bc location.href navigates only iframe, window.top.location.href moves parent page so user actually goes to map page
+            // when i used location.href here, it would load the map page in the iframe with the header.. so it was double header ew
             parts.push('<button class="back-to-map" onclick="window.top.location.href=\'/\'">Back to Map</button>');
             parts.push('</div>');
 

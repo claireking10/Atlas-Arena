@@ -133,30 +133,7 @@ async function submitQuiz({ auth0_id, cityName, score }) {
     }
 }
 
-// claire added: user profile functions; gets single user profile data w games played and total score
-async function getUserProfile(auth0_id) {
-    try {
-        if (!pool) throw new Error("Database connection not established");
-        const result = await pool.request()
-            .input('auth0_id', sql.NVarChar, auth0_id)
-            .query(`
-                SELECT 
-                    u.username,
-                    u.totalScore,
-                    u.createdAt,
-                    COUNT(qs.id) AS gamesPlayed
-                FROM users u
-                LEFT JOIN quiz_scores qs ON qs.auth0_id = u.auth0_id
-                WHERE u.auth0_id = @auth0_id
-                GROUP BY u.username, u.totalScore, u.createdAt
-            `);
-        return result.recordset[0] || null;
-    } catch (err) {
-        console.error('Error fetching user profile:', err);
-        return null;
-    }
-}
-
+// claire added 
 // get or create user
 // Create user if they don't exist, otherwise just return their data from DB
 async function getOrCreateUser(auth0_id, username) {
@@ -222,7 +199,6 @@ exports.dbCities = getCities;
 exports.dbQuiz = getQuiz;
 exports.dbCityById = getCityById;
 exports.dbSubmitQuiz = submitQuiz;
-exports.dbUserProfile = getUserProfile; //By Claire
 exports.dbGetOrCreateUser = getOrCreateUser; //By Claire
 exports.dbGetLeaderboard = getLeaderboard; //By Lily
 exports.dbGamesPlayed = gamesPlayed; //By Lily

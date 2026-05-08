@@ -58,11 +58,8 @@ graph LR
   DB -.->|"getQuiz / getCityById"| TCities
   DB -.->|"getQuiz"| TQuestions
   DB -.->|"submitQuiz"| TScores
-  DB -.->|"upsert user / submitQuiz"| TUsers
-  DB -.->|"getOrCreateUser"| TUsers
-  DB -.->|"gamesPlayed"| TScores
-  DB -.->|"updateUserName"| TUsers
-  DB -.->|"getUserProfile"| TUsers
+  DB -.->|"getOrCreateUser / updateUserName / gamesPlayed"| TUsers
+  DB -.->|"submitQuiz"| TUsers
 
   classDef client fill:#E3F2FD,stroke:#1976D2,color:#0D47A1
   classDef server fill:#FFF3E0,stroke:#EF6C00,color:#E65100

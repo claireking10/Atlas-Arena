@@ -18,7 +18,7 @@ const config = {
     options: {
         encrypt: true
     }
-};  
+};
 
 // end required variables
 
@@ -133,8 +133,76 @@ async function submitQuiz({ auth0_id, cityName, score }) {
     }
 }
 
+// claire added 
+// get or create user
+// Create user if they don't exist, otherwise just return their data from DB
+async function getOrCreateUser(auth0_id, username) {
+    if (!pool) throw new Error("Database connection not established");
+
+    // only inserts if the user doesn't exist yet — never overwrites username
+    await pool.request()
+        .input('auth0_id', sql.NVarChar, auth0_id)
+        .input('username', sql.NVarChar, username)
+        .query(`
+            IF NOT EXISTS (SELECT 1 FROM users WHERE auth0_id = @auth0_id)
+                INSERT INTO users (auth0_id, username, totalScore, createdAt)
+                VALUES (@auth0_id, @username, 0, GETDATE())
+        `);
+
+    const result = await pool.request()
+        .input('auth0_id', sql.NVarChar, auth0_id)
+        .query('SELECT * FROM users WHERE auth0_id = @auth0_id');
+
+    return result.recordset[0];
+}
+
+async function getLeaderboard() { //By Lily
+    if (!pool) throw new Error("Database connection not established");
+    const result = await pool.request().query('SELECT * FROM users ORDER BY totalScore DESC');
+    return result.recordset
+}
+
+async function gamesPlayed(auth0_id) { //By Lily
+    if (!pool) throw new Error("Database connection not established");
+    const result = await pool.request()
+        .input('auth0_id', sql.NVarChar, auth0_id)
+        .query('SELECT COUNT(*) AS gamesPlayed FROM quiz_scores WHERE auth0_id = @auth0_id');
+    return result.recordset[0].gamesPlayed;
+}
+
+async function updateUserName(auth0_id, username) { //By Lily
+    if (!pool) throw new Error("Database connection not established");
+    await pool.request()
+        .input('auth0_id', sql.NVarChar, auth0_id)
+        .input('username', sql.NVarChar, username)
+        .query('UPDATE users SET username = @username WHERE auth0_id = @auth0_id');
+}
+
+async function searchLeaderboard(username) { //By Lily
+    if (!pool) throw new Error("Database connection not established");
+    const result = await pool.request()
+        .input('username', sql.NVarChar, `%${username}%`)
+        .query('SELECT * FROM users WHERE username LIKE @username ORDER BY totalScore DESC');
+    return result.recordset;
+}
+
+async function getOtherCities(cityId) { //By Lily
+    if (!pool) throw new Error("Database connection not established");
+    const results = await pool.request()
+        .input('cityId', sql.Int, cityId)
+        .query(`SELECT * FROM cities WHERE id != @cityId`);
+    return results.recordset;
+}
+
 // export functions to app.js
 exports.dbCities = getCities;
 exports.dbQuiz = getQuiz;
 exports.dbCityById = getCityById;
 exports.dbSubmitQuiz = submitQuiz;
+exports.dbGetOrCreateUser = getOrCreateUser; //By Claire
+exports.dbGetLeaderboard = getLeaderboard; //By Lily
+exports.dbGamesPlayed = gamesPlayed; //By Lily
+exports.dbUpdateUserName = updateUserName; //By Lily
+exports.dbGetCities = getCities; //By Lily
+exports.dbSearchLeaderboard = searchLeaderboard; //By Lily
+exports.dbGetOtherCities = getOtherCities; //By Lily

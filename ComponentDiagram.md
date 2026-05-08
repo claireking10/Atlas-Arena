@@ -7,8 +7,9 @@ graph LR
     WorldMap["worldMap.ejs<br/>Interactive Map"]
     Quiz["quiz.ejs<br/>Trivia Gameplay"]
     City["city.ejs<br/>City Detail"]
+    Profile["profile.ejs<br/>Stats + Edit Profile"]
     IntJS["public/script/int.js<br/>Map + Pin Logic"]
-    CSS["public/css<br/>style.css, intStyle.css"]
+    CSS["public/css<br/>style.css, intStyle.css, profile.css, quiz.css"]
     IMG["public/images<br/>City PNGs"]
   end
 
@@ -35,8 +36,11 @@ graph LR
   WorldMap -->|"GET /interactive-map"| App
   Quiz -->|"GET /quiz"| App
   Quiz -->|"POST /quiz/submit"| App
+  Profile -->|"GET /profile"| App
+  Profile -->|"POST /profile/edit"| App
   IntJS --> WorldMap
   CSS --> Home
+  CSS --> Profile
   IMG --> Quiz
 
   App --> Auth
@@ -54,14 +58,15 @@ graph LR
   DB -.->|"getQuiz / getCityById"| TCities
   DB -.->|"getQuiz"| TQuestions
   DB -.->|"submitQuiz"| TScores
-  DB -.->|"upsert user / submitQuiz"| TUsers
+  DB -.->|"getOrCreateUser / updateUserName / gamesPlayed"| TUsers
+  DB -.->|"submitQuiz"| TUsers
 
   classDef client fill:#E3F2FD,stroke:#1976D2,color:#0D47A1
   classDef server fill:#FFF3E0,stroke:#EF6C00,color:#E65100
   classDef ext fill:#F3E5F5,stroke:#8E24AA,color:#4A148C
   classDef db fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
 
-  class Home,WorldMap,Quiz,City,IntJS,CSS,IMG client
+  class Home,WorldMap,Quiz,City,Profile,IntJS,CSS,IMG client
   class App,Auth,DB server
   class Auth0,GMaps,Azure ext
   class TUsers,TCities,TQuestions,TScores db

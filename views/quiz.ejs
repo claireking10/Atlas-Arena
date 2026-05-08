@@ -1,124 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/style.css">
-    <title><%= city.name %></title>
-    <!-- TO DO: Move to new css file-->
-    <style>
-        body {
-            font-family: sans-serif;
-            text-align: center;
-            background-color: white;
-        }
-
-        .quiz-container {
-            max-width: 600px;
-            margin: 40px auto;
-            padding: 20px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-        }
-
-        .flag-placeholder img {
-            width: 200px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .answers button {
-            display: block;
-            width: 100%;
-            margin: 10px 0;
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            background-color: #0078D4;
-            color: white;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .answers button:hover {
-            background-color: #005fa3;
-        }
-
-        .feedback {
-            margin-top: 15px;
-            font-weight: bold;
-        }
-
-        .next-btn {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .next-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .progress {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .answers button.correct {
-            background-color: #4caf50;
-        }
-
-        .answers button.wrong {
-            background-color: #e53935;
-        }
-
-        .answers button:disabled {
-            cursor: default;
-            opacity: 0.9;
-        }
-
-        .summary-list {
-            list-style: none;
-            padding: 0;
-            text-align: left;
-        }
-
-        .summary-list li {
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .summary-actions button {
-            margin: 6px;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            color: white;
-        }
-
-        .summary-actions .play-again { background-color: #0078D4; }
-        .summary-actions .back-to-map { background-color: #4caf50; }
-
-        .new-high { color: #d4a017; font-weight: bold; }
-    </style>
-
+<%- include('../partials/header', { page_title: city ? "Quiz: " + city.name : "Quiz" }) %>
+<link rel="stylesheet" href="/css/quiz.css">
+<!-- claire changed: moved css styling for the quiz page into quiz.css -->
+<body>
     <script>
         // turn ejs variables into js constants
-        const cityInfo = <%- JSON.stringify(typeof city !== 'undefined' ? city : {}) %>;
-        const citiesTable = <%- JSON.stringify(typeof cities !== 'undefined' ? cities : []) %>;
+        // const cityInfo = <%- JSON.stringify(typeof city !== 'undefined' ? city : {}) %>;
+        // const citiesTable = <%- JSON.stringify(typeof cities !== 'undefined' ? cities : []) %>;
+        const cityId = <%- JSON.stringify(typeof city !== 'undefined' ? city.id : null) %>;
+        const cityName = <%- JSON.stringify(typeof city !== 'undefined' ? city.name : null) %>;
         const questionsTable = <%- JSON.stringify(typeof questions !== 'undefined' ? questions : []) %>;
     </script>
-</head>
-
-<body>
 
     <main>
         <div class="quiz-container" id="quiz-screen">
@@ -151,24 +42,25 @@
         let submitting = false;
         const recordedAnswers = [];
 
-        // return a list of shuffled answer choices based on the list of cities (remove duplicate answers)
-        function buildChoices(question) {
-            const correct = cityInfo[question.field];
-            const seen = new Set([correct]);
-            const wrongs = [];
-            for (const c of citiesTable) {
-                const v = c[question.field];
-                if (v != null && !seen.has(v)) {
-                    seen.add(v);
-                    wrongs.push(v);
-                }
-            }
-            const shuffledWrongs = wrongs.sort(() => Math.random() - 0.5).slice(0, 3);
-            return [correct, ...shuffledWrongs].sort(() => Math.random() - 0.5);
-        }
+        //Moved to server side by Lily
+        // // return a list of shuffled answer choices based on the list of cities (remove duplicate answers)
+        // function buildChoices(question) {
+        //     const correct = cityInfo[question.field];
+        //     const seen = new Set([correct]);
+        //     const wrongs = [];
+        //     for (const c of citiesTable) {
+        //         const v = c[question.field];
+        //         if (v != null && !seen.has(v)) {
+        //             seen.add(v);
+        //             wrongs.push(v);
+        //         }
+        //     }
+        //     const shuffledWrongs = wrongs.sort(() => Math.random() - 0.5).slice(0, 3);
+        //     return [correct, ...shuffledWrongs].sort(() => Math.random() - 0.5);
+        // }
 
         // initialize the question with q/total, answer choices, and submit buttons
-        function loadQuestion() {
+        async function loadQuestion() {
             const q = questionsTable[currentIndex];
             document.getElementById("progress").innerText =
                 "Question " + (currentIndex + 1) + " of " + questionsTable.length;
@@ -177,7 +69,10 @@
             const answersDiv = document.getElementById("answers");
             answersDiv.innerHTML = "";
 
-            const choices = buildChoices(q);
+            //Adjusted to serverside by Lily
+            const response = await fetch(`/api/quiz/choices/${cityId}/${q.field}`);
+            const choices = await response.json();
+            // const choices = buildChoices(q);
             choices.forEach(choice => {
                 const btn = document.createElement("button");
                 btn.innerText = choice == null ? "" : choice;
@@ -196,12 +91,16 @@
         }
 
         // when answer selected, check for correctness and give feedback accordingly
-        function checkAnswer(selectedAnswer, btn) {
+        async function checkAnswer(selectedAnswer, btn) {
             if (locked) return;
             locked = true;
             const elapsedMs = Date.now() - questionStartTime;
             const q = questionsTable[currentIndex];
-            const correctValue = cityInfo[q.field];
+
+            //Adjusted to server side by Lily
+            // const correctValue = cityInfo[q.field];
+            const response = await fetch(`/api/quiz/answer/${cityId}/${q.field}`);
+            const correctValue = await response.json();
             const isCorrect = selectedAnswer === correctValue;
 
             // classify buttons as right or wrong to highlight colors
@@ -255,20 +154,22 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        cityId: cityInfo.id,
+                        cityId: cityId,
                         answers: recordedAnswers
                     })
                 });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
                 renderSummary(data);
+                window.parent.postMessage("quizSubmitted", "*"); //Added by Lily to refresh Leaderboard
             } catch (err) {
                 document.getElementById("summary-content").innerHTML =
                     '<h2>Quiz Complete</h2>' +
                     '<p>Failed to submit your score. Refresh to try again.</p>' +
                     '<div class="summary-actions">' +
-                    '<button class="back-to-map" onclick="location.href=\'/\'">Back to Map</button>' +
+                    '<button class="back-to-map" onclick="window.top.location.href=\'/\'">Back to Map</button>' +
                     '</div>';
+                    <!-- claire changed location.href to window.top.location.href bc location.href navigates only iframe, window.top.location.href moves parent page so user actually goes to map page -->
             }
         }
 
@@ -280,10 +181,10 @@
 
             if (data.recorded) {
                 if (data.isNewHighScore) {
-                    parts.push('<p class="new-high">New high score for ' + escapeHtml(cityInfo.name) +
+                    parts.push('<p class="new-high">New high score for ' + escapeHtml(cityName) +
                         '! Previous best: ' + data.previousBest + '</p>');
                 } else {
-                    parts.push('<p>Your best for ' + escapeHtml(cityInfo.name) + ': ' + data.previousBest + '</p>');
+                    parts.push('<p>Your best for ' + escapeHtml(cityName) + ': ' + data.previousBest + '</p>');
                 }
             } else {
                 parts.push('<p style="font-style: italic; color: #666;">Log in to save your scores to the leaderboard.</p>');
@@ -302,7 +203,9 @@
 
             parts.push('<div class="summary-actions">');
             parts.push('<button class="play-again" onclick="location.reload()">Play Again</button>');
-            parts.push('<button class="back-to-map" onclick="location.href=\'/interactive-map\'">Back to Map</button>');
+            // claire changed location.href to window.top.location.href bc location.href navigates only iframe, window.top.location.href moves parent page so user actually goes to map page
+            // when i used location.href here, it would load the map page in the iframe with the header.. so it was double header ew
+            parts.push('<button class="back-to-map" onclick="window.top.location.href=\'/\'">Back to Map</button>');
             parts.push('</div>');
 
             document.getElementById("summary-content").innerHTML = parts.join('');
@@ -328,8 +231,7 @@
         }
     </script>
 
-</body>
-</html>
+<%- include('../partials/footer') %>
 
 
 

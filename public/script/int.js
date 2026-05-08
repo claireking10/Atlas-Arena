@@ -51,7 +51,8 @@ export function randomPin(){
 
         async function execute() {
             await sleep(7000); // Wait 7 seconds
-            window.location.href = `/quiz?city=${encodeURIComponent(JSON.stringify(randomPin))}`; // change from map to quiz inside iframe
+            // claire changed: location.href to window.top.location.href bc location.href navigates only iframe, window.top.location.href moves parent page so user actually goes to map page
+            window.top.location.href = `/quiz?city=${encodeURIComponent(JSON.stringify(randomPin))}`; // change from map to quiz inside iframe
         }
     execute();
 
@@ -82,15 +83,14 @@ export function startQuiz(pin){
 
         async function execute() {
             await sleep(1400); // Wait 1.4 seconds
-            window.location.href = `/quiz?city=${encodeURIComponent(JSON.stringify(pin))}`; // change from map to quiz inside iframe
+            // claire changed: location.href to window.top.location.href bc location.href navigates only iframe, window.top.location.href moves parent page so user actually goes to map page
+            window.top.location.href = `/quiz?city=${encodeURIComponent(JSON.stringify(pin))}`; // change from map to quiz inside iframe
         }
     execute();
 
     
     
 }
-
-
 
 let map;
 
@@ -157,6 +157,7 @@ async function initMap() {
         startBtn.addEventListener('click', () => {
             popup.style.display = 'none';
             startQuiz(entry);
+            
         });
     };
 
@@ -165,10 +166,28 @@ async function initMap() {
 
 //console.log("test");
 initMap();
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
+
+//iniya and nitya fixed the double-click taking you to a different random city 
+//than the one the game "flew" to on the map by adding a timeout after clicking
+//start random quiz button (window)
+let canClick = true;
 
 // because the map is in an iframe, it must listen for button clicks outside of the iframe. In this case, it is the start random quiz button.
 window.addEventListener("message", (event) => {
+    if (canClick == false) { 
+        return;
+    }
+    canClick = false;
+    
     if (event.data === "runRandomPin") {
         randomPin();
+          
     }
+    setTimeout(() => {
+        //after 8 sec, canClick becomes true again
+        canClick = true;
+    }, 8000);
 });
+

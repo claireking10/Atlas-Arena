@@ -9,7 +9,7 @@ graph LR
     City["city.ejs<br/>City Detail"]
     Profile["profile.ejs<br/>Stats + Edit Profile"]
     IntJS["public/script/int.js<br/>Map + Pin Logic"]
-    CSS["public/css<br/>style.css, intStyle.css, profile.css", quiz.css"]
+    CSS["public/css<br/>style.css, intStyle.css, profile.css, quiz.css"]
     IMG["public/images<br/>City PNGs"]
   end
 

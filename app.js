@@ -112,6 +112,7 @@ app.get('/quiz', async (req, res) => {
     //console.log(result);
     res.render('quiz', result);
 });
+
 //Lily Added - Moves BuildChoices here to keep things server side
 app.get("/api/quiz/choices/:cityId/:field", async (req, res) => {
     const { cityId, field } = req.params;
@@ -131,6 +132,7 @@ app.get("/api/quiz/choices/:cityId/:field", async (req, res) => {
     const choices = [correct, ...shuffledWrongs].sort(() => Math.random() - 0.5);
     res.json(choices);
 });
+
 //Lily added - Check Answer here to prevent cheating
 app.get("/api/quiz/answer/:cityId/:field", async (req, res) => {
     const { cityId, field } = req.params;
@@ -189,9 +191,8 @@ app.post('/quiz/submit', async (req, res) => {
     }
 });
 
-
 // Main route including leaderboard
-// TO DO: Move queries into database.js - Done!By Lily
+// TO DO: Move queries into database.js - Done! By Lily
 app.get('/', async (req, res) => {
     try {
         const result = await getLeaderboard();
